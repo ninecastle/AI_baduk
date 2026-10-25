@@ -206,7 +206,7 @@
     if (name === 'archive') renderArchive();
     if (name === 'settings') renderSettings();
     if (name === 'review' && window.Review) window.Review.onShow();
-    if (name === 'game' && view) view.resize();
+    if (name === 'game') { if (game && board) { renderGame(); if (view) view.resize(); if (game.status === 'scoring' && scoring) recomputeScore(); if (isBotTurn() && !botThinking) botMove(); } else { showScreen('home'); return; } }
     if (name === 'viewer' && viewerView) viewerView.resize();
     if (name === 'review-moves' && window.Review) window.Review.onShowMoves();
     if (name === 'tsumego' && window.TsumegoUI) window.TsumegoUI.onShow();
@@ -467,7 +467,7 @@
   }
 
   async function botMove(humanPassed) {
-    if (!isBotTurn()) return;
+    if (!isBotTurn() || botThinking) return;
     botThinking = true; const token = ++botToken;
     renderPlayerBars(); renderControls(); renderStatus();
     let res = null;
