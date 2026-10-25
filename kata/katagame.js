@@ -62,7 +62,7 @@
     }
     static fromMoves(size, komi, moves /* app {c,p} */, setup) {
       const g = new Game(size, komi);
-      if (setup) g.setup(setup.black, setup.white);
+      if (setup) { g.setup(setup.black, setup.white); if (setup.toPlay) g.toPlay = setup.toPlay; }
       for (const m of moves) g.play(g.locOf(m.p), m.c);
       return g;
     }

@@ -1,9 +1,9 @@
 /* sw.js — 오프라인 캐시 (GitHub Pages 설치형 앱용). 앱 파일과 신경망을 미리 받아두고, 이후엔 캐시 우선 */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'badukrab-' + VERSION;
 const PRECACHE = [
   './', './index.html', './app.css', './app.js', './go.js', './board-view.js', './engine.worker.js', './review.js',
-  './tsumego.js', './tsumego-data.js', './tsumego-ui.js', './sync.js', './manifest.webmanifest',
+  './tsumego.js', './tsumego-data.js', './tsumego-ui.js', './learn.js', './learn-data.js', './sync.js', './manifest.webmanifest',
   './kata/kataboard.js', './kata/katafeatures.js', './kata/katagame.js', './kata/katanet.js', './kata/katasearch.js', './kata/kataengine.js', './kata/kata.worker.js',
   './models/b10c128.wasm',
   './icons/icon-192.png', './icons/icon-512.png',

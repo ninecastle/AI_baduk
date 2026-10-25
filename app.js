@@ -143,6 +143,19 @@
     return idx[idx.length - 1];
   }
   /** KataGo 기반 봇 착수. 반환 {move, winrate(봇 기준), blackWinrate} */
+  /** 봇 기권 판단 (봇 관점 승률·집 차이). 세 번 연속 조건을 만족해야 기권
+      - 압도적 차이(대마가 잡히는 등): 초반이라도 기권
+      - 그 외: 판이 거의 채워진 중후반에 역전 가능성이 사실상 없을 때만 */
+  function shouldResign(wrBot, leadBot) {
+    const L = game.size, n = game.moves.length, area = L * L;
+    if (n < Math.min(20, area * 0.2)) { game.botLowCount = 0; return false; }
+    const huge = L >= 19 ? 30 : L >= 13 ? 20 : 12;   // 압도적 차이
+    const lateNeed = L >= 19 ? 15 : L >= 13 ? 10 : 6; // 후반 기준
+    const overwhelming = wrBot < 0.01 && leadBot < -huge;
+    const lateHopeless = n >= area * 0.55 && wrBot < 0.03 && leadBot < -lateNeed;
+    if (overwhelming || lateHopeless) game.botLowCount = (game.botLowCount || 0) + 1; else game.botLowCount = 0;
+    return game.botLowCount >= 3;
+  }
   async function kataGenmove(humanPassed) {
     const lv = KATA_LEVELS[game.botLevel] || KATA_LEVELS[4];
     const L = game.size, PASSI = L * L;
@@ -156,13 +169,13 @@
       let pick = lv.temp ? sampleTemp(visits, lv.temp) : -1;
       if (pick < 0) { let b = res.moves[0]; pick = b.p < 0 ? PASSI : b.p; }
       const best = res.moves[0];
-      // 기권: 크게 불리하고 충분히 진행됐을 때
-      if (late && res.winrate < 0.03 && res.lead < -15 && game.botLevel >= 5) return { move: RESIGN, winrate: res.winrate };
+      if (shouldResign(res.winrate, res.lead)) return { move: RESIGN, winrate: res.winrate };
       // 상대 패스 시: 이기고 있으면 패스로 종국
       if (humanPassed && res.lead > 0 && (best.p < 0 || late)) return { move: PASS, winrate: res.winrate };
       return { move: pick === PASSI ? PASS : pick, winrate: res.winrate };
     }
     const r = await kata.evaluate(spec);
+    if (shouldResign(r.winrate, r.lead)) return { move: RESIGN, winrate: r.winrate };
     const probs = Float32Array.from(r.policy);
     if (lv.rnd && Math.random() < lv.rnd && game.moves.length > 2) {
       // 무작위 실수: 정책이 아주 낮은 수는 피함 (완전 엉뚱한 수 방지)
@@ -190,12 +203,12 @@
   let viewer = null;          // {entry, positions, idx, numbers}
 
   // ───────── 화면 전환 ─────────
-  const TITLES = { home: '', game: '대국', review: '게임 리뷰', 'review-moves': '한 수씩 보기', tsumego: '사활', 'tsumego-play': '사활', archive: '기보함', viewer: '기보', settings: '설정' };
-  const TAB_OF = { home: 'home', game: 'home', review: 'review', 'review-moves': 'review', tsumego: 'tsumego', 'tsumego-play': 'tsumego', archive: 'archive', viewer: 'archive', settings: 'settings' };
+  const TITLES = { home: '', game: '대국', review: '게임 리뷰', 'review-moves': '한 수씩 보기', tsumego: '사활', 'tsumego-play': '사활', learn: '배우기', 'learn-lesson': '배우기', archive: '기보함', viewer: '기보', settings: '설정' };
+  const TAB_OF = { home: 'home', game: 'home', review: 'review', 'review-moves': 'review', tsumego: 'tsumego', 'tsumego-play': 'tsumego', learn: 'learn', 'learn-lesson': 'learn', archive: 'archive', viewer: 'archive', settings: 'settings' };
   function showScreen(name) {
     screen = name;
     $$('.screen').forEach(s => { s.hidden = s.id !== 'screen-' + name; });
-    const sub = name === 'game' || name === 'viewer' || name === 'settings' || name === 'review-moves' || name === 'tsumego-play';
+    const sub = name === 'game' || name === 'viewer' || name === 'settings' || name === 'review-moves' || name === 'tsumego-play' || name === 'learn-lesson';
     $('#btn-back').hidden = !sub;
     $('#brand').hidden = sub;
     $('#top-title').textContent = TITLES[name] || '';
@@ -210,6 +223,8 @@
     if (name === 'viewer' && viewerView) viewerView.resize();
     if (name === 'review-moves' && window.Review) window.Review.onShowMoves();
     if (name === 'tsumego' && window.TsumegoUI) window.TsumegoUI.onShow();
+    if (name === 'learn' && window.Learn) window.Learn.onShow();
+    if (name === 'learn-lesson' && window.Learn) window.Learn.onShowLesson();
     if (name === 'tsumego-play' && window.TsumegoUI) window.TsumegoUI.onShowPlay();
   }
   $$('[data-tab]').forEach(b => b.addEventListener('click', () => {
@@ -223,6 +238,7 @@
     else if (screen === 'viewer') showScreen('archive');
     else if (screen === 'review-moves') showScreen('review');
     else if (screen === 'tsumego-play') showScreen('tsumego');
+    else if (screen === 'learn-lesson') showScreen('learn');
     else showScreen(game && game.status !== 'ended' ? 'game' : 'home');
   });
 
@@ -316,7 +332,22 @@
   function drawBoard() {
     if (!view) return;
     const last = game.moves.length ? game.moves[game.moves.length - 1].p : -1;
-    view.setState({ stones: board.stones, lastMove: last, ghost, dead: scoring ? scoring.dead : null, owner: scoring ? scoring.score.owner : null, marks: [], numbers: null, dimAll: false });
+    let dead = scoring ? scoring.dead : null, owner = scoring ? scoring.score.owner : null;
+    if (game.status === 'ended' && !scoring) { dead = new Set(game.dead || []); owner = game.owner || null; }
+    view.setState({ stones: board.stones, lastMove: last, ghost, dead, owner, marks: [], numbers: null, dimAll: false });
+  }
+  /** AI 소유권으로 사석·영역 추정 (흑 기준 Float32Array 반환) */
+  async function aiOwnership() {
+    await ensureKata();
+    const r = await kata.evaluate(gameSpec());
+    const sign = board.toPlay === BLACK ? 1 : -1;
+    const own = new Float32Array(r.ownership.length); for (let i = 0; i < own.length; i++) own[i] = sign * r.ownership[i];
+    return { own, r };
+  }
+  function deadFromOwnership(own, threshold) {
+    const dead = new Set();
+    for (const g of board.groups()) { let s = 0; for (const p of g.stones) s += own[p]; s /= g.stones.length; if ((g.color === BLACK && s < -threshold) || (g.color === WHITE && s > threshold)) g.stones.forEach(p => dead.add(p)); }
+    return dead;
   }
 
   function playerBarHTML(color) {
@@ -502,6 +533,32 @@
     saveGame(); renderGame();
   }
 
+  // ───────── 계가 신청 (플레이어 → AI) ─────────
+  async function requestScoring() {
+    if (!game || game.status !== 'playing') return;
+    if (botThinking) { toast('봇이 생각 중이에요. 잠시 뒤에 신청하세요'); return; }
+    const L = game.size;
+    if (game.moves.length < L * L * 0.4) { toast(`${botByLevel(game.botLevel).name}: 아직 초반이에요. 더 두어요!`); return; }
+    renderStatus('AI가 계가 신청을 검토하는 중…');
+    let accept = true, reason = '';
+    try {
+      const { own, r } = await aiOwnership();
+      if (!game || game.status !== 'playing') return;
+      const passProb = r.policy[L * L] || 0;
+      let contested = 0;
+      for (let i = 0; i < L * L; i++) if (board.stones[i] === EMPTY && Math.abs(own[i]) > 0.25 && Math.abs(own[i]) < 0.8) contested++;
+      const blackLead = board.toPlay === BLACK ? r.lead : -r.lead;
+      const botLead = game.botColor === BLACK ? blackLead : -blackLead;
+      const over = passProb > 0.2 || contested <= Math.max(2, L * L * 0.01);
+      if (over) { accept = true; reason = '좋아요, 계가해요.'; }
+      else if (botLead > 3 && contested <= L * L * 0.05) { accept = true; reason = '좋아요. 조금 남았지만 계가해요.'; }
+      else { accept = false; reason = botLead <= 0 ? '아직 둘 곳이 남았어요. 더 둬 볼게요.' : '경계가 아직 덜 정해졌어요. 조금 더 둬요.'; }
+    } catch (_) { accept = true; reason = '좋아요, 계가해요.'; }
+    const bot = botByLevel(game.botLevel);
+    toast(`${bot.name}: ${reason}`, 2800);
+    if (accept) startScoring(); else renderStatus();
+  }
+
   // ───────── 계가 ─────────
   async function startScoring() {
     game.status = 'scoring'; ghost = null; cancelEngine(); botThinking = false;
@@ -566,10 +623,22 @@
   function endGame(result) {
     game.status = 'ended'; game.result = result; game.endedAt = new Date().toISOString(); game.saved = false;
     cancelEngine(); botThinking = false; ghost = null;
-    if (!scoring) scoring = null;
+    if (scoring) { game.dead = [...scoring.dead]; game.owner = Array.from(scoring.score.owner); }
+    scoring = null;
     saveGame(); renderGame();
     $('#panel-scoring').hidden = true;
     showResultSheet(true);
+    if (result.by === 'resign') {
+      const g = game;
+      aiOwnership().then(({ own }) => {
+        if (game !== g) return;
+        const dead = deadFromOwnership(own, 0.3);
+        g.dead = [...dead];
+        g.owner = Array.from(own, (v, i) => (board.stones[i] === EMPTY || dead.has(i)) ? (v > 0.5 ? BLACK : v < -0.5 ? WHITE : 0) : 0);
+        saveGame(); drawBoard();
+        if (archive.some(e => e.id === g.id)) { const e = archive.find(e => e.id === g.id); e.dead = g.dead; e.owner = g.owner; e.updatedAt = Date.now(); saveArchive(); }
+      }).catch(() => { });
+    }
   }
   function showResultSheet(askSave) {
     const r = game.result, bot = botByLevel(game.botLevel);
@@ -607,18 +676,20 @@
   function saveToArchive(g) {
     const bot = botByLevel(g.botLevel);
     const entry = { id: g.id, date: g.endedAt || new Date().toISOString(), size: g.size, komi: g.komi, handicap: g.handicap, bot: { level: bot.level, name: bot.name, rank: bot.rank }, humanColor: g.humanColor,
-      result: g.result, moves: g.moves, setup: g.setup, evals: g.evals, dead: g.dead || [] };
+      result: g.result, moves: g.moves, setup: g.setup, evals: g.evals, dead: g.dead || [], owner: g.owner || null };
     entry.updatedAt = Date.now();
     archive = archive.filter(e => e.id !== g.id); archive.unshift(entry); saveArchive();
   }
 
   function showGameMenu() {
     const s = openSheet(`<h2>메뉴</h2><div class="list">
+      ${game.status === 'playing' ? `<button class="list-row" data-a="count"><svg class="chev" style="width:22px;height:22px"><use href="#i-check"/></svg><div class="grow"><div class="primary-text">계가 신청</div><div class="secondary-text">끝났다고 생각하면 AI에게 계가를 제안해요</div></div></button>` : ''}
       <button class="list-row" data-a="settings"><svg class="chev" style="width:22px;height:22px"><use href="#i-settings"/></svg><div class="grow"><div class="primary-text">설정</div><div class="secondary-text">테마, 좌표, 소리</div></div></button>
       <button class="list-row" data-a="sgf"><svg class="chev" style="width:22px;height:22px"><use href="#i-copy"/></svg><div class="grow"><div class="primary-text">SGF 복사</div><div class="secondary-text">현재 기보를 클립보드에 복사</div></div></button>
       <button class="list-row" data-a="save"><svg class="chev" style="width:22px;height:22px"><use href="#i-archive"/></svg><div class="grow"><div class="primary-text">지금 상태로 기보함에 저장</div></div></button>
       <button class="list-row" data-a="quit" style="color:var(--danger)"><svg class="chev" style="width:22px;height:22px;color:var(--danger)"><use href="#i-flag"/></svg><div class="grow"><div class="primary-text">대국 그만두기</div><div class="secondary-text">기록 없이 홈으로</div></div></button>
     </div>`);
+    const cnt = s.querySelector('[data-a=count]'); if (cnt) cnt.onclick = () => { closeSheet(); requestScoring(); };
     s.querySelector('[data-a=settings]').onclick = () => { closeSheet(); showScreen('settings'); };
     s.querySelector('[data-a=sgf]').onclick = () => { closeSheet(); copyText(gameSGF(game)); };
     s.querySelector('[data-a=save]').onclick = () => { closeSheet(); saveToArchive(game); game.saved = true; saveGame(); toast('기보함에 저장했어요'); };
@@ -691,8 +762,14 @@
     const pos = v.positions[v.idx];
     let numbers = null;
     if (v.numbers) { numbers = new Map(); for (let i = 0; i < v.idx; i++) { const m = v.entry.moves[i]; if (m.p >= 0 && pos.stones[m.p] === m.c) numbers.set(m.p, i + 1); } }
-    const dead = (v.idx === v.positions.length - 1 && v.entry.dead && v.entry.dead.length) ? new Set(v.entry.dead) : null;
-    viewerView.setState({ stones: pos.stones, lastMove: pos.last, ghost: null, dead, owner: null, marks: [], numbers, dimAll: false });
+    const atEnd = v.idx === v.positions.length - 1;
+    const dead = (atEnd && v.entry.dead && v.entry.dead.length) ? new Set(v.entry.dead) : null;
+    let owner = null;
+    if (atEnd && v.entry.result) {
+      if (v.entry.owner) owner = Uint8Array.from(v.entry.owner);
+      else { try { const b = Go.Board.fromMoves(v.entry.size, v.entry.moves, v.entry.setup); owner = Go.territoryScore(b, dead || new Set(), v.entry.komi).owner; } catch (_) { } }
+    }
+    viewerView.setState({ stones: pos.stones, lastMove: pos.last, ghost: null, dead, owner, marks: [], numbers, dimAll: false });
     $('#viewer-range').value = v.idx;
     const e = v.entry; const bot = e.imported ? null : botByLevel(e.bot.level);
     const nameOf = c => e.imported ? (c === BLACK ? e.names.black : e.names.white) : (c === e.humanColor ? '나' : `${bot.name} ${bot.rank}`);
@@ -710,7 +787,11 @@
   $('#v-numbers').onclick = () => { viewer.numbers = !viewer.numbers; renderViewer(); };
   $('#v-copy').onclick = () => copyText(gameSGF(Object.assign({ botLevel: viewer.entry.bot.level }, viewer.entry)));
   $('#v-review').onclick = () => { if (viewer && window.Review) window.Review.open(viewer.entry.id); };
-  $('#v-delete').onclick = async () => { const ok = await confirmSheet('기보 삭제', '이 기보를 기보함에서 지울까요?', '삭제', 'danger'); if (!ok) return; const del = store.get('deleted', []); del.push(viewer.entry.id); store.set('deleted', del.slice(-200)); archive = archive.filter(e => e.id !== viewer.entry.id); saveArchive(); showScreen('archive'); toast('삭제했어요'); };
+  function deleteEntry(id) {
+    const del = store.get('deleted', []); del.push(id); store.set('deleted', del.slice(-200));
+    archive = archive.filter(e => e.id !== id); saveArchive();
+  }
+  $('#v-delete').onclick = async () => { const ok = await confirmSheet('기보 삭제', '이 기보를 지울까요? 리뷰 기록도 함께 사라져요.', '삭제', 'danger'); if (!ok) return; deleteEntry(viewer.entry.id); showScreen('archive'); toast('삭제했어요'); };
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && $('#sheet-root').firstChild && !$('#result-actions')) { closeSheet(); return; }
     if (screen !== 'viewer' || !viewer) return;
@@ -807,7 +888,12 @@
     replaceArchive: (list) => { archive = list; store.set('archive', archive); if (screen === 'archive') renderArchive(); if (screen === 'home') renderHome(); if (screen === 'review' && window.Review) window.Review.onShow(); },
     replaceSettings: (obj) => { Object.assign(settings, obj); store.set('settings', settings); applyBoardSettings(); if (screen === 'settings') renderSettings(); if (screen === 'home') renderHome(); },
     deletedIds: () => store.get('deleted', []),
+    deleteEntry: id => deleteEntry(id),
     syncChanged: () => { if (screen === 'settings') renderSync(); },
+    startGameWith: async (o) => {
+      if (game && game.status !== 'ended') { const ok = await confirmSheet('새 대국', '두던 대국이 있어요. 새로 시작하면 지금 대국은 사라져요.', '새로 시작', 'danger'); if (!ok) return; }
+      settings.size = o.size || 9; settings.bot = o.bot || 1; settings.color = o.color || BLACK; settings.handicap = o.handicap || 0; saveSettings(); startGame();
+    },
     getKataStatus: () => kataStatus, isKataFailed: () => kataFailed,
     get screen() { return screen; },
   };

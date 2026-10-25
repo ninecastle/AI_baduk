@@ -39,6 +39,7 @@
     <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M8 7h7M8 11h5"/></symbol>
     <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
   </defs>
 </svg>
@@ -48,6 +49,7 @@
     <div class="brand"><svg class="logo"><use href="#i-logo"/></svg><span>바둑랩</span></div>
     <button class="nav" data-tab="home"><svg><use href="#i-play"/></svg>대국</button>
     <button class="nav" data-tab="review"><svg><use href="#i-review"/></svg>리뷰</button>
+    <button class="nav" data-tab="learn" hidden><svg><use href="#i-book"/></svg>배우기</button>
     <button class="nav" data-tab="tsumego"><svg><use href="#i-puzzle"/></svg>사활</button>
     <button class="nav" data-tab="archive"><svg><use href="#i-archive"/></svg>기보함</button>
     <div class="grow"></div>
@@ -185,6 +187,24 @@
         </div>
       </section>
 
+      <!-- 배우기 -->
+      <section class="screen" id="screen-learn" hidden>
+        <div class="hero" id="learn-hero"></div>
+        <div id="learn-parts" style="display:flex;flex-direction:column;gap:12px"></div>
+      </section>
+      <section class="screen" id="screen-learn-lesson" hidden>
+        <div id="learn-head" class="learn-head"></div>
+        <div class="game-layout">
+          <div class="board-col" id="learn-board-col">
+            <div class="board-wrap" id="learn-wrap"></div>
+          </div>
+          <div class="side-col">
+            <div class="card learn-card" id="learn-card"></div>
+            <div class="btn-row" id="learn-controls"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- 사활 -->
       <section class="screen" id="screen-tsumego" hidden>
         <div class="hero" id="ts-hero"></div>
@@ -278,6 +298,7 @@
   <nav class="tabbar" id="tabbar">
     <button data-tab="home"><svg><use href="#i-play"/></svg>대국</button>
     <button data-tab="review"><svg><use href="#i-review"/></svg>리뷰</button>
+    <button data-tab="learn" hidden><svg><use href="#i-book"/></svg>배우기</button>
     <button data-tab="tsumego"><svg><use href="#i-puzzle"/></svg>사활</button>
     <button data-tab="archive"><svg><use href="#i-archive"/></svg>기보함</button>
   </nav>
@@ -298,6 +319,8 @@
 <script src="tsumego.js"></script>
 <script src="tsumego-data.js"></script>
 <script src="tsumego-ui.js"></script>
+<script src="learn-data.js"></script>
+<script src="learn.js"></script>
 <script src="firebase-config.js"></script>
 <script src="sync.js"></script>
 <script>

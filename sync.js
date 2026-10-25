@@ -68,6 +68,16 @@
       for (const id in rp) { const a = lp[id], b = rp[id]; if (!a || (b.last || '') > (a.last || '')) mp[id] = b; else if (a && b) mp[id] = { solved: Math.max(a.solved || 0, b.solved || 0), failed: Math.max(a.failed || 0, b.failed || 0), last: a.last > b.last ? a.last : b.last }; }
       if (window.TsumegoUI) window.TsumegoUI.replaceProgress(mp);
       await doc('tsumego').set({ progress: mp, updatedAt: Date.now() });
+      // 2-1) 배우기 진도 병합 (완료는 어느 쪽이든 유지)
+      if (window.Learn) {
+        const lDoc = await doc('learn').get();
+        const rl = lDoc.exists ? (lDoc.data().progress || {}) : {};
+        const ll = window.Learn.getProgress();
+        const ml = Object.assign({}, rl, ll);
+        for (const id in rl) if (rl[id].done) ml[id] = Object.assign({}, ll[id], rl[id], { done: true });
+        window.Learn.replaceProgress(ml);
+        await doc('learn').set({ progress: ml, updatedAt: Date.now() });
+      }
       // 3) 설정: 원격이 더 새로우면 가져오기
       const stDoc = await doc('settings').get();
       if (stDoc.exists && (stDoc.data().updatedAt || 0) > (A.store.get('settingsUpdatedAt', 0))) A.replaceSettings(stDoc.data().settings || {});
@@ -103,6 +113,7 @@
             for (const e of list) { batch.set(col().doc(e.id), slim(e)); n++; }
             for (const id of deleted) { batch.delete(col().doc(id)); n++; }
             if (n) await batch.commit();
+          } else if (k === 'learn') { await doc('learn').set({ progress: window.Learn.getProgress(), updatedAt: Date.now() });
           } else if (k === 'tsumego') { await doc('tsumego').set({ progress: window.TsumegoUI.getProgress(), updatedAt: Date.now() }); }
           else if (k === 'settings') { const now = Date.now(); A.store.set('settingsUpdatedAt', now); await doc('settings').set({ settings: A.settings, updatedAt: now }); }
         }

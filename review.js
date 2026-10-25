@@ -35,13 +35,20 @@
       const av = e.imported ? A.avatarHTML({ name: (e.names && e.names.white) || '백', color: '#5b6573' }, 'sm') : A.avatarHTML(A.botByLevel(e.bot.level), 'sm');
       const title = e.imported ? `${esc(e.names.black)} vs ${esc(e.names.white)}` : `${esc(e.bot.name)} ${esc(e.bot.rank)}`;
       const reviewed = e.review ? `<span class="chip accent">${e.review.summary ? Math.round(e.review.summary[e.humanColor === BLACK ? 'black' : 'white'].accuracy) + '%' : '분석됨'}</span>` : `<span class="chip">${r ? (iWon ? '승' : r.winner === 0 ? '빅' : '패') : ''}</span>`;
-      const row = el(`<button class="list-row">${av}<div class="grow"><div class="primary-text">${title} · ${e.size}줄</div><div class="secondary-text">${A.fmtDate(e.date)} · ${e.moves.length}수${r ? ' · ' + esc(r.text) : ''}${e.review ? ' · ' + esc(MODES[e.review.mode] ? MODES[e.review.mode].name : '') : ''}</div></div>${reviewed}<svg class="chev"><use href="#i-chev"/></svg></button>`);
-      row.onclick = () => open(e.id);
+      const row = el(`<div class="list-row" style="padding-right:8px"><button class="rv-open" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-align:left">${av}<div class="grow" style="min-width:0"><div class="primary-text">${title} · ${e.size}줄</div><div class="secondary-text">${A.fmtDate(e.date)} · ${e.moves.length}수${r ? ' · ' + esc(r.text) : ''}${e.review ? ' · ' + esc(MODES[e.review.mode] ? MODES[e.review.mode].name : '') : ''}</div></div>${reviewed}</button><button class="icon-btn rv-del" aria-label="삭제"><svg><use href="#i-trash"/></svg></button></div>`);
+      row.querySelector('.rv-open').onclick = () => open(e.id);
+      row.querySelector('.rv-del').onclick = () => removeGame(e.id);
       list.appendChild(row);
     }
   }
   $$('#review-mode button').forEach(b => b.onclick = () => { mode = b.dataset.v; A.store.set('reviewMode', mode); onShow(); });
 
+  async function removeGame(id, after) {
+    const ok = await A.confirmSheet('대국 삭제', '이 대국을 지울까요? 기보함과 리뷰에서 함께 사라져요.', '삭제', 'danger');
+    if (!ok) return;
+    delete cache[id]; A.deleteEntry(id); A.toast('삭제했어요');
+    if (after) after(); else onShow();
+  }
   async function open(id) {
     const entry = A.findEntry(id); if (!entry) { A.toast('기보를 찾을 수 없어요'); return; }
     A.showScreen('review');
@@ -173,10 +180,12 @@
       </div>
       ${worst.length ? `<div class="card" style="margin-top:18px"><div class="card-title">가장 아팠던 수</div><div class="cands">${worst.map(x => `<button class="cand" data-i="${x.i + 1}"><span class="mv">${x.i + 1}수</span>${badgeHTML(x.m.cls)}<span>${A.colorName(x.m.c)} ${coord(x.m.p, entry.size)}</span><span class="grow"></span><span class="stat">−${x.m.loss.toFixed(1)}집</span></button>`).join('')}</div></div>` : ''}
       <div class="btn-row" style="margin-top:18px"><button class="btn secondary" id="sum-back">다른 대국</button><button class="btn primary lg" id="sum-moves"><svg><use href="#i-next"/></svg>한 수씩 보기</button></div>
-      <button class="btn ghost block" id="sum-redo" style="margin-top:6px">다시 분석 (${esc(MODES[mode].name)})</button>`;
+      <button class="btn ghost block" id="sum-redo" style="margin-top:6px">다시 분석 (${esc(MODES[mode].name)})</button>
+      <button class="btn ghost block" id="sum-del" style="margin-top:2px;color:var(--danger)"><svg><use href="#i-trash"/></svg>이 대국 삭제</button>`;
     drawGraph($('#sum-graph'), review, -1, i => showMoves(entry, i));
     $('#sum-moves').onclick = () => showMoves(entry, 1);
     $('#sum-back').onclick = () => onShow();
+    $('#sum-del').onclick = () => removeGame(entry.id);
     $('#sum-redo').onclick = async () => { const ok = await A.confirmSheet('다시 분석', `${MODES[mode].name}으로 처음부터 다시 분석할까요?`, '분석'); if (!ok) return; delete cache[entry.id]; A.updateEntry(entry.id, { review: null }); analyze(entry); };
     $$('#review-summary .cand').forEach(b => b.onclick = () => showMoves(entry, +b.dataset.i));
   }

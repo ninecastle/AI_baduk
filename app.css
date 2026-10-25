@@ -83,7 +83,7 @@ p { margin: 0; }
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
-  background: var(--surface); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--surface); border-top: 1px solid var(--line); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
 }
 .tabbar button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--fg-3); font-size: 11px; font-weight: 500; }
 .tabbar button svg { width: 24px; height: 24px; }
@@ -311,6 +311,34 @@ p { margin: 0; }
 .mode-pick button { padding: 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface-2); text-align: left; display: flex; flex-direction: column; gap: 4px; }
 .mode-pick button.active { border-color: var(--accent); background: var(--accent-soft); }
 .mode-pick .t { font-weight: 700; } .mode-pick .d { font-size: 12px; color: var(--fg-2); }
+
+/* ── 배우기 ── */
+.learn-part-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; width: 100%; text-align: left; }
+.learn-part-head .grow { flex: 1; min-width: 0; }
+.learn-part-head .primary-text { font-weight: 700; }
+.learn-part-head .secondary-text { font-size: 12px; color: var(--fg-3); }
+.learn-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line-strong); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex: none; }
+.learn-dot.done { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.learn-head { display: flex; flex-direction: column; gap: 4px; }
+.learn-crumb { font-size: 12px; color: var(--fg-3); font-weight: 600; }
+.learn-title { font-size: 19px; font-weight: 700; }
+.learn-steps { display: flex; gap: 4px; margin-top: 6px; }
+.learn-steps i { flex: 1; height: 5px; border-radius: 3px; background: var(--surface-3); }
+.learn-steps i.done { background: var(--accent); opacity: .55; } .learn-steps i.on { background: var(--accent); }
+.learn-card { display: flex; flex-direction: column; gap: 10px; }
+.learn-text { font-size: 15px; line-height: 1.65; }
+.learn-note { font-size: 14px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); min-height: 44px; }
+.learn-task { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+.learn-fb { padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.55; }
+.learn-fb.ok { background: var(--accent-soft); } .learn-fb.no { background: var(--danger-soft); }
+.learn-fb.ok b { color: var(--accent); } .learn-fb.no b { color: var(--danger); }
+.learn-quiz { display: flex; flex-direction: column; gap: 8px; }
+.learn-opt { text-align: left; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border: 2px solid transparent; font-size: 14px; }
+.learn-opt:hover:not([disabled]) { background: var(--surface-3); }
+.learn-opt.ok { border-color: var(--accent); background: var(--accent-soft); } .learn-opt.no { border-color: var(--danger); background: var(--danger-soft); }
+.learn-challenge { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: var(--surface-2); }
+.learn-challenge .grow { flex: 1; min-width: 0; }
+#learn-controls .btn { flex: 1; }
 
 /* ── 데스크톱 ── */
 @media (min-width: 960px) {
