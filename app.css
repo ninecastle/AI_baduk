@@ -3,8 +3,8 @@
    Layout: 모바일 = 상단 바 + 콘텐츠 + 하단 탭바 / 데스크톱(≥960px) = 좌측 레일 + 중앙 컬럼, 대국 화면은 판 + 우측 패널
    ─────────────────────────────────────────────── */
 :root {
-  --bg: #2b2a27; --surface: #3a3835; --surface-2: #42403c; --surface-3: #4b4945;
-  --line: #3f3d39; --line-strong: #5a5752; --nav-bg: #22211e;
+  --bg: #1f1e1c; --surface: #383633; --surface-2: #484641; --surface-3: #56534d;
+  --line: #45433e; --line-strong: #65625b; --nav-bg: #171614;
   --fg: #ffffff; --fg-2: #c3c0ba; --fg-3: #8f8c86;
   --accent: #81b64c; --accent-2: #8fc35a; --accent-ink: #ffffff; --accent-soft: rgba(129, 182, 76, 0.16); --accent-edge: #537a31;
   --danger: #ff6b6b; --danger-soft: rgba(255, 107, 107, 0.14); --warn: #ffb547; --good: #5ee0a0;

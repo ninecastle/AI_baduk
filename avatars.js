@@ -18,7 +18,7 @@
       <path d="M66 34 Q74 31 79 36 L80 44 L70 47Z" fill="#f2c230"/>
       <path d="M74 35 Q90 34 91 48 Q90 58 83 59 Q84 51 79 49 L70 47Z" fill="#3a3f46"/>
       <path d="M70 47 L80 49 Q78 53 72 53Z" fill="#2a2e33"/>
-      <path d="M78 38 Q86 39 88 46" fill="none" stroke="#5f666f" stroke-width="1.6" stroke-linecap="round"/>`, '#9d86e6', '#4f3c96'),
+      <path d="M78 38 Q86 39 88 46" fill="none" stroke="#5f666f" stroke-width="1.6" stroke-linecap="round"/>`, '#7fe0c8', '#1f7566'),
     // 2 늑대
     2: S(`
       <path d="M16 100 Q20 72 50 69 Q80 72 84 100Z" fill="#5d646e"/>
@@ -31,7 +31,7 @@
       <path d="M31 46 Q38 42 45 47" fill="none" stroke="#4d535c" stroke-width="2" stroke-linecap="round"/><path d="M69 46 Q62 42 55 47" fill="none" stroke="#4d535c" stroke-width="2" stroke-linecap="round"/>
       ${eyeAlmond(38, 51, '#f0b429')}${eyeAlmond(62, 51, '#f0b429')}
       <path d="M44.5 62 Q50 58.5 55.5 62 Q53.5 67.5 50 67.5 Q46.5 67.5 44.5 62Z" fill="#26272a"/>
-      <path d="M50 67.5 V71.5 M45.5 73.5 Q50 76 54.5 73.5" fill="none" stroke="#5b5f66" stroke-width="1.6" stroke-linecap="round"/>`, '#9aa6b5', '#3e4651'),
+      <path d="M50 67.5 V71.5 M45.5 73.5 Q50 76 54.5 73.5" fill="none" stroke="#5b5f66" stroke-width="1.6" stroke-linecap="round"/>`, '#9aa0ff', '#2e2b80'),
     // 3 곰
     3: S(`
       <path d="M12 100 Q16 72 50 70 Q84 72 88 100Z" fill="#5a3d2a"/>
@@ -44,7 +44,7 @@
       <path d="M50 65 V69 M45 71 Q50 74.5 55 71" fill="none" stroke="#5a3d2a" stroke-width="1.8" stroke-linecap="round"/>
       <circle cx="38.5" cy="49" r="3.4" fill="#1b130f"/><circle cx="39.6" cy="47.9" r="1" fill="#fff"/>
       <circle cx="61.5" cy="49" r="3.4" fill="#1b130f"/><circle cx="62.6" cy="47.9" r="1" fill="#fff"/>
-      <path d="M33 43 Q38.5 40 44 43" fill="none" stroke="#5e3f28" stroke-width="2" stroke-linecap="round"/><path d="M56 43 Q61.5 40 67 43" fill="none" stroke="#5e3f28" stroke-width="2" stroke-linecap="round"/>`, '#c79f78', '#5c412b'),
+      <path d="M33 43 Q38.5 40 44 43" fill="none" stroke="#5e3f28" stroke-width="2" stroke-linecap="round"/><path d="M56 43 Q61.5 40 67 43" fill="none" stroke="#5e3f28" stroke-width="2" stroke-linecap="round"/>`, '#9ad8f7', '#245f92'),
     // 4 표범
     4: S(`
       <path d="M16 100 Q20 73 50 71 Q80 73 84 100Z" fill="#c48a31"/>
@@ -59,7 +59,7 @@
       ${eyeAlmond(38.5, 51, '#a8cf3e', true)}${eyeAlmond(61.5, 51, '#a8cf3e', true)}
       <path d="M34 54 Q38 60 42 63" fill="none" stroke="#5b3a19" stroke-width="1.5" stroke-linecap="round"/><path d="M66 54 Q62 60 58 63" fill="none" stroke="#5b3a19" stroke-width="1.5" stroke-linecap="round"/>
       <path d="M45 61.5 L55 61.5 L50 66.5Z" fill="#c4735b"/>
-      <path d="M50 66.5 V70 M45.5 72 Q50 74.5 54.5 72" fill="none" stroke="#7b5a3c" stroke-width="1.5" stroke-linecap="round"/>`, '#f2cf7a', '#9a6b1e'),
+      <path d="M50 66.5 V70 M45.5 72 Q50 74.5 54.5 72" fill="none" stroke="#7b5a3c" stroke-width="1.5" stroke-linecap="round"/>`, '#c995f5', '#552490'),
     // 5 호랑이
     5: S(`
       <path d="M16 100 Q20 73 50 71 Q80 73 84 100Z" fill="#e07a1c"/>
@@ -76,7 +76,7 @@
       ${eyeAlmond(39, 51, '#f5c33b')}${eyeAlmond(61, 51, '#f5c33b')}
       <path d="M44.5 61 L55.5 61 L50 66.5Z" fill="#d0675a"/>
       <path d="M50 66.5 V70 M45 72 Q50 75 55 72" fill="none" stroke="#6d5848" stroke-width="1.6" stroke-linecap="round"/>
-      <g fill="#6d5848"><circle cx="40" cy="70" r=".9"/><circle cx="37" cy="68" r=".9"/><circle cx="60" cy="70" r=".9"/><circle cx="63" cy="68" r=".9"/></g>`, '#ff9e6e', '#a8321f'),
+      <g fill="#6d5848"><circle cx="40" cy="70" r=".9"/><circle cx="37" cy="68" r=".9"/><circle cx="60" cy="70" r=".9"/><circle cx="63" cy="68" r=".9"/></g>`, '#6f8cf5', '#1b2c80'),
     // 6 독수리
     6: S(`
       <path d="M16 100 Q20 72 46 70 Q72 72 84 100Z" fill="#4a3123"/>
@@ -87,7 +87,7 @@
       <circle cx="60" cy="39" r="4.4" fill="#f2c230"/><circle cx="60.4" cy="39" r="2.6" fill="#141414"/><circle cx="61.4" cy="37.9" r=".9" fill="#fff"/>
       <path d="M67 36 Q84 33 90 46 Q91 57 84 59 Q84 51 76 50 L65 48Z" fill="#f2b51c"/>
       <path d="M65 48 L80 50.5 Q76 55 67 54Z" fill="#d89a10"/>
-      <path d="M71 40 Q80 39 86 46" fill="none" stroke="#ffd25a" stroke-width="1.6" stroke-linecap="round"/>`, '#7fb6ea', '#1f4f86'),
+      <path d="M71 40 Q80 39 86 46" fill="none" stroke="#ffd25a" stroke-width="1.6" stroke-linecap="round"/>`, '#ffae78', '#ad3f24'),
     // 7 용
     7: S(`
       <path d="M50 14 L58 22 L68 16 L70 28 L82 26 L78 38 L90 42 L80 50 L88 60 L76 62 L78 74 L66 70 L62 82 L50 74 L38 82 L34 70 L22 74 L24 62 L12 60 L20 50 L10 42 L22 38 L18 26 L30 28 L32 16 L42 22Z" fill="#f2b33d"/>
@@ -101,7 +101,7 @@
       <path d="M42 76 Q50 80 58 76" fill="none" stroke="#24603f" stroke-width="1.8" stroke-linecap="round"/>
       <path d="M30 44 Q38 39 46 45" fill="none" stroke="#1f6e47" stroke-width="2.4" stroke-linecap="round"/><path d="M70 44 Q62 39 54 45" fill="none" stroke="#1f6e47" stroke-width="2.4" stroke-linecap="round"/>
       ${eyeAlmond(39, 49, '#ffd34d', true)}${eyeAlmond(61, 49, '#ffd34d', true)}
-      <path d="M35 71 Q21 72 14 86" fill="none" stroke="#f6d27a" stroke-width="2.4" stroke-linecap="round"/><path d="M65 71 Q79 72 86 86" fill="none" stroke="#f6d27a" stroke-width="2.4" stroke-linecap="round"/>`, '#6fe0a8', '#14674a'),
+      <path d="M35 71 Q21 72 14 86" fill="none" stroke="#f6d27a" stroke-width="2.4" stroke-linecap="round"/><path d="M65 71 Q79 72 86 86" fill="none" stroke="#f6d27a" stroke-width="2.4" stroke-linecap="round"/>`, '#f47a8b', '#861a39'),
     // 8 현무 (거북 + 뱀)
     8: S(`
       <ellipse cx="50" cy="98" rx="46" ry="32" fill="#264b48"/>
@@ -120,7 +120,7 @@
       <path d="M70 92 C74 74 88 76 88 62 C88 52 80 50 76 54" fill="none" stroke="#1b2b2a" stroke-width="6" stroke-linecap="round"/>
       <ellipse cx="76" cy="52" rx="6.5" ry="4.6" fill="#1b2b2a" transform="rotate(-20 76 52)"/>
       <circle cx="74.5" cy="50.6" r="1.2" fill="#e3c04c"/>
-      <path d="M70 54 L65 55 M65 55 L63 53.5 M65 55 L63 56.8" fill="none" stroke="#d65a4a" stroke-width="1" stroke-linecap="round"/>`, '#5fb7b0', '#163f45'),
+      <path d="M70 54 L65 55 M65 55 L63 53.5 M65 55 L63 56.8" fill="none" stroke="#d65a4a" stroke-width="1" stroke-linecap="round"/>`, '#f7cf6a', '#9c5a15'),
   };
   for (const k in ART) ART[k] = ART[k].replace('id="g"', 'id="ag' + k + '"').replace('url(#g)', 'url(#ag' + k + ')');
   window.BOT_ART = ART;
