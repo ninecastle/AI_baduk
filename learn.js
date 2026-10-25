@@ -59,7 +59,7 @@
     for (const part of PARTS) {
       const ls = LESSONS.filter(l => l.part === part.id);
       const d = ls.filter(l => lessonDone(l.id)).length;
-      const card = el(`<div class="card pad-0 learn-part"><button class="learn-part-head"><div class="avatar" style="background:linear-gradient(140deg,${part.color},${part.color}aa);font-size:15px">${part.id}</div><div class="grow"><div class="primary-text">${esc(part.title)}</div><div class="secondary-text">${esc(part.desc)}</div><div class="progress-bar" style="margin-top:8px;height:5px"><div style="width:${ls.length ? Math.round(d / ls.length * 100) : 0}%"></div></div></div><span class="chip">${d}/${ls.length}</span></button><div class="list learn-lessons" hidden></div></div>`);
+      const card = el(`<div class="card pad-0 learn-part"><button class="learn-part-head"><div class="avatar" style="background:linear-gradient(140deg,${part.color},${part.color}aa);font-size:17px">${part.id}</div><div class="grow"><div class="primary-text">${esc(part.title)}</div><div class="secondary-text">${esc(part.desc)}</div><div class="progress-bar" style="margin-top:8px;height:5px"><div style="width:${ls.length ? Math.round(d / ls.length * 100) : 0}%"></div></div></div><span class="chip">${d}/${ls.length}</span></button><div class="list learn-lessons" hidden></div></div>`);
       const box = card.querySelector('.learn-lessons');
       for (const l of ls) {
         const done = lessonDone(l.id);

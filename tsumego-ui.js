@@ -50,7 +50,7 @@
     for (const l of LEVELS) {
       const s = stats(l.lv);
       const pct = s.total ? Math.round(s.solved / s.total * 100) : 0;
-      const row = el(`<button class="list-row"><div class="avatar" style="background:linear-gradient(140deg,var(--accent),#1b7f6b);color:var(--accent-ink);font-size:14px">${l.lv}</div><div class="grow"><div class="primary-text">${esc(l.name)} <span class="chip" style="margin-left:4px">${s.solved}/${s.total}</span></div><div class="secondary-text">${esc(l.desc)}</div><div class="progress-bar" style="margin-top:8px;height:5px"><div style="width:${pct}%"></div></div></div><svg class="chev"><use href="#i-chev"/></svg></button>`);
+      const row = el(`<button class="list-row"><div class="avatar" style="background:linear-gradient(140deg,var(--accent),#1b7f6b);color:var(--accent-ink);font-size:16px">${l.lv}</div><div class="grow"><div class="primary-text">${esc(l.name)} <span class="chip" style="margin-left:4px">${s.solved}/${s.total}</span></div><div class="secondary-text">${esc(l.desc)}</div><div class="progress-bar" style="margin-top:8px;height:5px"><div style="width:${pct}%"></div></div></div><svg class="chev"><use href="#i-chev"/></svg></button>`);
       row.onclick = () => openLevel(l.lv);
       list.appendChild(row);
     }
@@ -66,7 +66,7 @@
   function problemRow(p) {
     const st = progress[p.id] || {};
     const tag = st.solved ? '<span class="chip accent">해결</span>' : st.failed ? `<span class="chip warn">틀림 ${st.failed}</span>` : '';
-    const row = el(`<button class="list-row"><div class="avatar sm" style="background:${p.goal === 'kill' ? '#2e3a4a' : '#3b4a3e'};font-size:12px">${p.goal === 'kill' ? '잡' : '살'}</div><div class="grow"><div class="primary-text">${esc(titleOf(p))}</div><div class="secondary-text">${LEVELS[p.level - 1].name} · ${p.kind === 'corner' ? '귀' : '변'} · ${p.sols.length > 1 ? '정답 여러 개' : '정답 하나'}</div></div>${tag}<svg class="chev"><use href="#i-chev"/></svg></button>`);
+    const row = el(`<button class="list-row"><div class="avatar sm" style="background:${p.goal === 'kill' ? '#2e3a4a' : '#3b4a3e'};font-size:14px">${p.goal === 'kill' ? '잡' : '살'}</div><div class="grow"><div class="primary-text">${esc(titleOf(p))}</div><div class="secondary-text">${LEVELS[p.level - 1].name} · ${p.kind === 'corner' ? '귀' : '변'} · ${p.sols.length > 1 ? '정답 여러 개' : '정답 하나'}</div></div>${tag}<svg class="chev"><use href="#i-chev"/></svg></button>`);
     row.onclick = () => openProblem(p.id);
     return row;
   }
@@ -142,7 +142,7 @@
     } else if (st === 'solution') {
       const sol = cur.sol, n = sol.steps.length - 1, step = sol.steps[sol.k];
       panel.innerHTML = `<div class="card-title">정답 수순 · ${sol.k} / ${n}</div>
-        <div style="font-weight:700;font-size:16px;min-height:24px">${esc(step.text)}</div>
+        <div style="font-weight:700;font-size:18px;min-height:24px">${esc(step.text)}</div>
         <div class="small muted" style="margin-top:4px">${sol.k === 0 ? '▶를 눌러 한 수씩 보세요. 판을 눌러도 넘어가요.' : sol.k === n ? (cur.prob.goal === 'kill' ? '상대가 어떻게 버텨도 이렇게 잡혀요.' : '상대가 어떻게 공격해도 이렇게 살아요.') : '상대는 가장 끈질긴 수로 버티고 있어요.'}</div>
         <div class="nav-row" style="margin-top:12px">
           <button class="btn secondary" id="sv-first" aria-label="처음" ${sol.k === 0 ? 'disabled' : ''}><svg><use href="#i-first"/></svg></button>

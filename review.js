@@ -281,7 +281,7 @@
     const bot = entry.imported ? null : A.botByLevel(entry.bot.level);
     const nameOf = c => entry.imported ? (c === BLACK ? entry.names.black : entry.names.white) : (c === entry.humanColor ? '나' : `${bot.name} ${bot.rank}`);
     const accOf = c => review.summary[c === BLACK ? 'black' : 'white'].accuracy.toFixed(1);
-    const bar = (c, id) => `<div class="player-bar" id="${id}">${c === entry.humanColor && !entry.imported ? A.avatarHTML(null) : A.avatarHTML(bot || { name: nameOf(c), color: '#5b6573' })}<div class="pinfo"><div class="pname"><span class="stone-dot ${c === BLACK ? 'b' : 'w'}"></span>${esc(nameOf(c))}</div><div class="pmeta"><span>정확도 <b class="num">${accOf(c)}</b></span></div></div><div class="num" style="font-weight:700;font-size:15px">${Math.round((c === BLACK ? pos.wr : 1 - pos.wr) * 100)}%</div></div>`;
+    const bar = (c, id) => `<div class="player-bar" id="${id}">${c === entry.humanColor && !entry.imported ? A.avatarHTML(null) : A.avatarHTML(bot || { name: nameOf(c), color: '#5b6573' })}<div class="pinfo"><div class="pname"><span class="stone-dot ${c === BLACK ? 'b' : 'w'}"></span>${esc(nameOf(c))}</div><div class="pmeta"><span>정확도 <b class="num">${accOf(c)}</b></span></div></div><div class="num" style="font-weight:700;font-size:17px">${Math.round((c === BLACK ? pos.wr : 1 - pos.wr) * 100)}%</div></div>`;
     const topColor = entry.imported ? WHITE : 3 - entry.humanColor;
     $('#rv-top').outerHTML = bar(topColor, 'rv-top'); $('#rv-bottom').outerHTML = bar(3 - topColor, 'rv-bottom');
     drawGraph($('#rv-graph'), review, idx, i => { cur.pv = null; cur.idx = i; renderMoves(); });
@@ -305,7 +305,7 @@
       const ev = pv.evals[depth];
       const cur1 = depth > 0 ? `${depth}. ${A.colorName(colAt(depth - 1))} ${coord(pv.moves[depth - 1], size)}` : '수순 시작 전';
       html += `<div class="review-move-head"><span class="chip accent">${esc(pv.title)}</span><span class="s">${depth} / ${n}수</span></div>`;
-      html += `<div style="font-weight:700;font-size:16px">${esc(cur1)}</div>`;
+      html += `<div style="font-weight:700;font-size:18px">${esc(cur1)}</div>`;
       html += `<div class="small" style="min-height:20px">${ev ? `이 수까지 가면: <b>${esc(Math.abs(ev.lead) < 0.05 ? '호각' : leadTxt(ev.lead) + '집')}</b> · 흑 승률 <b>${Math.round(ev.wr * 100)}%</b>` : (pv.evalBusy ? '<span class="muted">형세 계산 중…</span>' : '')}</div>`;
       html += `<div class="nav-row">
         <button class="btn secondary" id="pv-first" aria-label="처음" ${depth <= 1 ? 'disabled' : ''}><svg><use href="#i-first"/></svg></button>

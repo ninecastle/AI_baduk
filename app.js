@@ -140,7 +140,7 @@
     if (ov) {
       const loading = kataStatus.phase === 'model' || kataStatus.phase === 'tf' || kataStatus.phase === 'cpu';
       ov.hidden = !loading;
-      ov.innerHTML = loading ? `<div><div style="font-size:15px;opacity:.85;margin-bottom:8px">AI 준비 중</div><div>${esc(kataStatus.text)}</div>${kataStatus.progress != null ? `<div style="margin:12px auto 0;width:180px;height:6px;border-radius:3px;background:rgba(255,255,255,.25)"><div style="height:100%;width:${Math.round(kataStatus.progress * 100)}%;background:#fff;border-radius:3px"></div></div>` : ''}</div>` : '';
+      ov.innerHTML = loading ? `<div><div style="font-size:17px;opacity:.85;margin-bottom:8px">AI 준비 중</div><div>${esc(kataStatus.text)}</div>${kataStatus.progress != null ? `<div style="margin:12px auto 0;width:180px;height:6px;border-radius:3px;background:rgba(255,255,255,.25)"><div style="height:100%;width:${Math.round(kataStatus.progress * 100)}%;background:#fff;border-radius:3px"></div></div>` : ''}</div>` : '';
     }
     const info = $('#engine-info'); if (info) info.textContent = kataStatus.phase === 'ready' ? kataStatus.text : kataStatus.phase === 'error' ? kataStatus.text : kataStatus.phase === 'idle' ? 'AI 신경망은 첫 대국·분석 때 내려받아요 (약 6MB)' : kataStatus.text;
   }
@@ -738,7 +738,7 @@
   async function copyText(text) {
     try { await navigator.clipboard.writeText(text); toast('복사했어요'); }
     catch (_) {
-      const s = openSheet(`<h2>SGF</h2><div class="body">아래 내용을 길게 눌러 복사하세요.</div><textarea style="width:100%;height:160px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);padding:10px;font-family:monospace;font-size:12px" readonly>${esc(text)}</textarea><button class="btn secondary block" id="c-close">닫기</button>`);
+      const s = openSheet(`<h2>SGF</h2><div class="body">아래 내용을 길게 눌러 복사하세요.</div><textarea style="width:100%;height:160px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);padding:10px;font-family:monospace;font-size:14px" readonly>${esc(text)}</textarea><button class="btn secondary block" id="c-close">닫기</button>`);
       s.querySelector('textarea').select(); s.querySelector('#c-close').onclick = closeSheet;
     }
   }
@@ -759,7 +759,7 @@
     for (const e of archive) list.appendChild(archiveRow(e));
   }
   $('#btn-import').addEventListener('click', () => {
-    const s = openSheet(`<h2>SGF 불러오기</h2><div class="body">SGF 파일을 텍스트로 열어 내용을 붙여넣으세요.</div><textarea id="imp-text" style="width:100%;height:150px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);padding:10px;font-family:monospace;font-size:12px" placeholder="(;GM[1]FF[4]SZ[19]...)"></textarea><div class="btn-row"><button class="btn secondary" id="imp-cancel">취소</button><button class="btn primary" id="imp-ok">불러오기</button></div>`);
+    const s = openSheet(`<h2>SGF 불러오기</h2><div class="body">SGF 파일을 텍스트로 열어 내용을 붙여넣으세요.</div><textarea id="imp-text" style="width:100%;height:150px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);padding:10px;font-family:monospace;font-size:14px" placeholder="(;GM[1]FF[4]SZ[19]...)"></textarea><div class="btn-row"><button class="btn secondary" id="imp-cancel">취소</button><button class="btn primary" id="imp-ok">불러오기</button></div>`);
     s.querySelector('#imp-cancel').onclick = closeSheet;
     s.querySelector('#imp-ok').onclick = () => {
       try {
