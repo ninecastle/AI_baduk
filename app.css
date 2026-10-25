@@ -168,7 +168,10 @@ p { margin: 0; }
 .avatar.art svg { width: 100%; height: 100%; display: block; }
 
 /* 봇 선택 그리드 */
-.bot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.bot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bot-group-title { grid-column: 1 / -1; font-size: 14px; font-weight: 700; color: var(--fg); margin: 8px 2px 0; }
+.bot-group-title:first-child { margin-top: 0; }
+.bot-group-title span { font-weight: 500; color: var(--fg-3); font-size: 12px; margin-left: 4px; }
 .bot-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px; border-radius: 14px; border: 2px solid transparent; background: var(--surface-2); transition: border-color .15s, background .15s; }
 .bot-cell:hover { background: var(--surface-3); }
 .bot-cell.active { border-color: var(--accent); background: var(--accent-soft); }
@@ -180,7 +183,7 @@ p { margin: 0; }
 .bot-hero .name { font-size: 18px; font-weight: 700; }
 .bot-hero .desc { font-size: 13px; color: var(--fg-2); }
 .strength { display: flex; gap: 3px; margin-top: 6px; }
-.strength i { width: 14px; height: 5px; border-radius: 3px; background: var(--surface-3); }
+.strength i { width: 9px; height: 5px; border-radius: 3px; background: var(--surface-3); }
 .strength i.on { background: var(--accent); }
 
 /* 홈 히어로 */
@@ -367,7 +370,7 @@ p { margin: 0; }
   .controls .ctl.confirm { grid-column: span 2; }
   .sheet-backdrop { align-items: center; }
   .sheet { border-radius: 22px; max-height: 85vh; padding-bottom: 22px; }
-  .bot-grid { grid-template-columns: repeat(8, 1fr); }
+  .bot-grid { grid-template-columns: repeat(6, 1fr); }
   .theme-grid { grid-template-columns: repeat(5, 1fr); }
   .toast { bottom: 28px; }
 }

@@ -7,7 +7,7 @@ const KG = require('../kata/katagame.js');
 const KF = require('../kata/katafeatures.js');
 const KS = require('../kata/katasearch.js');
 const [,, sizeS, aS, bS, gS, seedS] = process.argv;
-const size = +sizeS, LA = +aS, LB = +bS, games = +gS;
+const size = +sizeS, LA = aS, LB = bS, games = +gS;
 let seed = +(seedS || 1) >>> 0; const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
 const LEVELS = JSON.parse(fs.readFileSync(__dirname + '/levels.json', 'utf8'));
 const buf = fs.readFileSync(__dirname + '/../models/b10c128.wasm');

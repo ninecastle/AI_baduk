@@ -7,17 +7,31 @@
   const $$ = s => Array.from(document.querySelectorAll(s));
 
   // ───────── 봇 ─────────
+  // 급수는 봇끼리 대국으로 잰 값을 바탕으로 한 추정치 (곰 = 정책망 그대로 ≈ 1급 기준)
   const BOTS = [
-    { level: 1, name: '매', rank: '6급', desc: '감각으로 두지만 가끔 엉뚱한 수를 둬요.', color: '#8a6fdf' },
-    { level: 2, name: '늑대', rank: '2급', desc: '빈틈을 파고드는 공격형.', color: '#6b7a8f' },
-    { level: 3, name: '곰', rank: '1급', desc: 'AI의 첫 감각 그대로 두는 두터운 상대.', color: '#8d6a4a' },
-    { level: 4, name: '표범', rank: '2단', desc: '몇 수 앞을 읽고 둬요. 곰보다 확실히 강해요.', color: '#d4a03a' },
-    { level: 5, name: '호랑이', rank: '3단', desc: '실수를 놓치지 않아요.', color: '#e0563f' },
-    { level: 6, name: '독수리', rank: '4단', desc: '넓게 보고 깊게 읽어요.', color: '#3f8fd4' },
-    { level: 7, name: '용', rank: '5단', desc: '한 수에 몇 초씩 생각하는 강자.', color: '#2fa37a' },
-    { level: 8, name: '현무', rank: '6단+', desc: '가장 깊게 읽는 봇. 한 수에 10초까지 걸려요.', color: '#2e7a9a' },
+    { level: 1, art: 'chick', name: '병아리', rank: '15급', desc: '이제 막 바둑을 배우는 중. 실수가 많아요.', color: '#ffb84d' },
+    { level: 2, art: 'rabbit', name: '토끼', rank: '12급', desc: '빠르지만 덤벙대요. 가끔 큰 실수를 해요.', color: '#f59ac8' },
+    { level: 3, art: 'squirrel', name: '다람쥐', rank: '10급', desc: '집 모으기를 좋아하지만 싸움은 서툴러요.', color: '#6fd3d8' },
+    { level: 4, art: 'cat', name: '고양이', rank: '8급', desc: '기본은 알지만 집중력이 들쭉날쭉해요.', color: '#ffd479' },
+    { level: 5, art: 'hawk', name: '매', rank: '6급', desc: '감각으로 두지만 가끔 엉뚱한 수를 둬요.', color: '#7fe0c8' },
+    { level: 6, art: 'fox', name: '여우', rank: '4급', desc: '꾀가 많아요. 작은 실수를 놓치지 않아요.', color: '#64b5f6' },
+    { level: 7, art: 'owl', name: '부엉이', rank: '3급', desc: '차분하게 모양을 갖춰 둬요.', color: '#8f7cf7' },
+    { level: 8, art: 'wolf', name: '늑대', rank: '2급', desc: '빈틈을 파고드는 공격형.', color: '#9aa0ff' },
+    { level: 9, art: 'bear', name: '곰', rank: '1급', desc: 'AI의 첫 감각 그대로 두는 두터운 상대.', color: '#9ad8f7' },
+    { level: 10, art: 'panda', name: '판다', rank: '1단', desc: '살짝 수를 읽고 둬요. 곰보다 한 단계 위.', color: '#a6e07a' },
+    { level: 11, art: 'leopard', name: '표범', rank: '2단', desc: '몇 수 앞을 읽고 둬요.', color: '#c995f5' },
+    { level: 12, art: 'tiger', name: '호랑이', rank: '3단', desc: '실수를 놓치지 않아요.', color: '#6f8cf5' },
+    { level: 13, art: 'eagle', name: '독수리', rank: '4단', desc: '넓게 보고 깊게 읽어요.', color: '#ffae78' },
+    { level: 14, art: 'dragon', name: '용', rank: '5단', desc: '한 수에 몇 초씩 생각하는 강자.', color: '#f47a8b' },
+    { level: 15, art: 'turtle', name: '현무', rank: '6단+', desc: '가장 깊게 읽는 봇. 한 수에 10초까지 걸려요.', color: '#f7cf6a' },
   ];
-  const botByLevel = lv => BOTS.find(b => b.level === lv) || BOTS[2];
+  const BOT_GROUPS = [
+    { title: '입문', sub: '15~10급', from: 1, to: 3 }, { title: '초급', sub: '8~4급', from: 4, to: 6 },
+    { title: '중급', sub: '3~1급', from: 7, to: 9 }, { title: '유단자', sub: '1단~6단+', from: 10, to: 15 },
+  ];
+  // 예전 8단계 번호 → 새 번호
+  const OLD_BOT_MAP = { 1: 5, 2: 8, 3: 9, 4: 11, 5: 12, 6: 13, 7: 14, 8: 15 };
+  const botByLevel = lv => BOTS.find(b => b.level === lv) || BOTS[8];
 
   // ───────── 저장소 ─────────
   const store = {
@@ -25,8 +39,9 @@
     set(k, v) { try { localStorage.setItem('badukrab:' + k, JSON.stringify(v)); } catch (_) { } },
     del(k) { try { localStorage.removeItem('badukrab:' + k); } catch (_) { } },
   };
-  const DEFAULT_SETTINGS = { theme: 'oak', stone: 'shell', coords: false, confirm: 'auto', sound: true, eval: false, size: 19, color: BLACK, handicap: 0, komi: 6.5, bot: 3 };
+  const DEFAULT_SETTINGS = { theme: 'oak', stone: 'shell', coords: false, confirm: 'auto', sound: true, eval: false, size: 19, color: BLACK, handicap: 0, komi: 6.5, bot: 9, botV: 2 };
   const settings = Object.assign({}, DEFAULT_SETTINGS, store.get('settings', {}));
+  if (settings.botV !== 2) { settings.bot = OLD_BOT_MAP[settings.bot] || 9; settings.botV = 2; store.set('settings', settings); }
   const saveSettings = () => { store.set('settings', settings); if (window.Sync) window.Sync.push('settings'); };
   let archive = store.get('archive', []);
   const saveArchive = () => { store.set('archive', archive); if (window.Sync) window.Sync.push('archive'); };
@@ -41,7 +56,9 @@
   function avatarHTML(bot, cls) {
     if (!bot) return `<div class="avatar me ${cls || ''}">나</div>`;
     const c = bot.color;
-    if (window.BOT_ART && window.BOT_ART[bot.level]) { const uid = 'ag' + bot.level + '_' + (++avatarSeq); return `<div class="avatar art ${cls || ''}">${window.BOT_ART[bot.level].split('ag' + bot.level).join(uid)}</div>`; }
+    const def = BOTS.find(b => b.name === bot.name) || (bot.level ? botByLevel(bot.level) : null);
+    const key = def && def.art;
+    if (key && window.BOT_ART && window.BOT_ART[key]) { const uid = 'ag' + key + '_' + (++avatarSeq); return `<div class="avatar art ${cls || ''}">${window.BOT_ART[key].split('ag' + key).join(uid)}</div>`; }
     return `<div class="avatar ${cls || ''}" style="background:linear-gradient(140deg,${c},${shade(c, -0.35)})">${esc(bot.name[0])}</div>`;
   }
   function shade(hex, k) {
@@ -129,10 +146,12 @@
   }
   // 난이도 → KataGo 사용법. temp: 정책 샘플링 온도, rnd: 무작위 수 확률, playouts: 탐색량
   const KATA_LEVELS = {
-    1: { temp: 0.9, rnd: 0.03 }, 2: { temp: 0.5 }, 3: { temp: 0.12 },
-    4: { playouts: 16, cpuPlayouts: 8, timeMs: 2500 }, 5: { playouts: 48, cpuPlayouts: 12, timeMs: 4000 },
-    6: { playouts: 120, cpuPlayouts: 12, timeMs: 6000 }, 7: { playouts: 260, cpuPlayouts: 20, timeMs: 8000 }, 8: { playouts: 600, cpuPlayouts: 32, timeMs: 10000 },
+    1: { temp: 1.25, rnd: 0.4 }, 2: { temp: 1.15, rnd: 0.22 }, 3: { temp: 1.05, rnd: 0.12 }, 4: { temp: 1.0, rnd: 0.05 },
+    5: { temp: 0.9, rnd: 0.03 }, 6: { temp: 0.68, rnd: 0.01 }, 7: { temp: 0.58 }, 8: { temp: 0.5 }, 9: { temp: 0.12 },
+    10: { playouts: 6, cpuPlayouts: 4, timeMs: 2000 }, 11: { playouts: 16, cpuPlayouts: 8, timeMs: 2500 }, 12: { playouts: 40, cpuPlayouts: 12, timeMs: 4000 },
+    13: { playouts: 100, cpuPlayouts: 16, timeMs: 6000 }, 14: { playouts: 250, cpuPlayouts: 24, timeMs: 8000 }, 15: { playouts: 600, cpuPlayouts: 32, timeMs: 10000 },
   };
+
   function gameSpec() { return { size: game.size, komi: game.komi, moves: game.moves, setup: game.setup }; }
   function sampleTemp(probs, temp, exclude) {
     // probs: Float32Array, temp>0. 상위 후보 중 temp 샘플링
@@ -164,7 +183,7 @@
     return game.botLowCount >= 3;
   }
   async function kataGenmove(humanPassed) {
-    const lv = KATA_LEVELS[game.botLevel] || KATA_LEVELS[4];
+    const lv = KATA_LEVELS[game.botLevel] || KATA_LEVELS[9];
     const L = game.size, PASSI = L * L;
     const spec = gameSpec();
     const late = game.moves.length >= L * L * 0.3;
@@ -264,10 +283,13 @@
     $('#btn-resume').hidden = !(game && game.status !== 'ended');
     // 봇 그리드
     const grid = $('#bot-grid'); grid.innerHTML = '';
-    for (const b of BOTS) {
-      const cell = el(`<button class="bot-cell ${b.level === settings.bot ? 'active' : ''}">${avatarHTML(b)}<span class="name">${esc(b.name)}</span><span class="rank">${esc(b.rank)}</span></button>`);
-      cell.onclick = () => { settings.bot = b.level; saveSettings(); renderHome(); };
-      grid.appendChild(cell);
+    for (const grp of BOT_GROUPS) {
+      grid.appendChild(el(`<div class="bot-group-title">${esc(grp.title)} <span>${esc(grp.sub)}</span></div>`));
+      for (const b of BOTS.filter(x => x.level >= grp.from && x.level <= grp.to)) {
+        const cell = el(`<button class="bot-cell ${b.level === settings.bot ? 'active' : ''}">${avatarHTML(b)}<span class="name">${esc(b.name)}</span><span class="rank">${esc(b.rank)}</span></button>`);
+        cell.onclick = () => { settings.bot = b.level; saveSettings(); renderHome(); };
+        grid.appendChild(cell);
+      }
     }
     // 세그먼트
     $$('#seg-size button').forEach(b => b.classList.toggle('active', +b.dataset.v === settings.size));
@@ -306,7 +328,7 @@
     const handicap = settings.handicap >= 2 ? settings.handicap : 0;
     const komi = handicap ? 0.5 : settings.komi;
     const setup = { black: Go.handicapPoints(size, handicap), white: [] };
-    game = { id: uid(), size, komi, handicap, botLevel: settings.bot, humanColor, botColor: 3 - humanColor, setup, moves: [], status: 'playing', result: null, startedAt: new Date().toISOString(), evals: [], dead: [] };
+    game = { id: uid(), size, komi, handicap, botLevel: settings.bot, botV: 2, humanColor, botColor: 3 - humanColor, setup, moves: [], status: 'playing', result: null, startedAt: new Date().toISOString(), evals: [], dead: [] };
     board = Go.Board.fromMoves(size, [], setup);
     if (handicap) board.toPlay = WHITE;
     saveGame();
@@ -520,7 +542,7 @@
     } catch (err) {
       if (token !== botToken || !game || game.status !== 'playing') return;
       try {
-        res = await engineCall('genmove', { size: game.size, komi: game.komi, moves: game.moves, setup: game.setup, level: Math.min(8, game.botLevel + 4), humanPassed: !!humanPassed });
+        res = await engineCall('genmove', { size: game.size, komi: game.komi, moves: game.moves, setup: game.setup, level: Math.min(8, Math.max(1, Math.round(game.botLevel * 8 / 15))), humanPassed: !!humanPassed });
       } catch (err2) { if (token === botToken) { botThinking = false; renderGame(); } return; }
     }
     if (token !== botToken || !game || game.status !== 'playing') return;
@@ -871,7 +893,8 @@
     const saved = (hot && hot.game) || store.get('current', null);
     if (saved && saved.moves) {
       try {
-        game = saved; board = Go.Board.fromMoves(game.size, game.moves, game.setup);
+        game = saved; if (game.botV !== 2) { game.botLevel = OLD_BOT_MAP[game.botLevel] || 9; game.botV = 2; }
+        board = Go.Board.fromMoves(game.size, game.moves, game.setup);
         if (game.handicap && !game.moves.length) board.toPlay = WHITE;
         if (game.status === 'scoring') { scoring = { dead: new Set(game.dead || []), ownership: null, score: null }; scoring.score = Go.territoryScore(board, scoring.dead, game.komi); }
         lastEval = game.evals && game.evals.length ? game.evals[game.evals.length - 1].black : null;
@@ -901,7 +924,7 @@
     syncChanged: () => { if (screen === 'settings') renderSync(); },
     startGameWith: async (o) => {
       if (game && game.status !== 'ended') { const ok = await confirmSheet('새 대국', '두던 대국이 있어요. 새로 시작하면 지금 대국은 사라져요.', '새로 시작', 'danger'); if (!ok) return; }
-      settings.size = o.size || 9; settings.bot = o.bot || 1; settings.color = o.color || BLACK; settings.handicap = o.handicap || 0; saveSettings(); startGame();
+      settings.size = o.size || 9; settings.bot = o.bot || 5; settings.color = o.color || BLACK; settings.handicap = o.handicap || 0; saveSettings(); startGame();
     },
     getKataStatus: () => kataStatus, isKataFailed: () => kataFailed,
     get screen() { return screen; },

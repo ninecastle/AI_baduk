@@ -6,7 +6,7 @@
     `<circle cx="${x + 1.3}" cy="${y - 1.8}" r="0.9" fill="#fff"/>`;
   const ART = {
     // 1 매
-    1: S(`
+    hawk: S(`
       <path d="M16 100 Q20 72 46 66 Q72 68 84 100Z" fill="#5e412b"/>
       <path d="M30 86 q6 -6 12 0 q6 -6 12 0 q6 -6 12 0 q6 -6 12 0" fill="none" stroke="#7d5a3d" stroke-width="3" stroke-linecap="round"/>
       <path d="M28 62 C24 40 36 22 56 22 C70 22 78 32 78 42 L71 47 C69 60 58 70 44 72 C35 72 30 68 28 62Z" fill="#7a5a3e"/>
@@ -20,7 +20,7 @@
       <path d="M70 47 L80 49 Q78 53 72 53Z" fill="#2a2e33"/>
       <path d="M78 38 Q86 39 88 46" fill="none" stroke="#5f666f" stroke-width="1.6" stroke-linecap="round"/>`, '#7fe0c8', '#1f7566'),
     // 2 늑대
-    2: S(`
+    wolf: S(`
       <path d="M16 100 Q20 72 50 69 Q80 72 84 100Z" fill="#5d646e"/>
       <path d="M26 42 L29 11 L47 31Z" fill="#59606a"/><path d="M30 34 L31.5 19 L41 30Z" fill="#d8b6a2"/>
       <path d="M74 42 L71 11 L53 31Z" fill="#59606a"/><path d="M70 34 L68.5 19 L59 30Z" fill="#d8b6a2"/>
@@ -33,7 +33,7 @@
       <path d="M44.5 62 Q50 58.5 55.5 62 Q53.5 67.5 50 67.5 Q46.5 67.5 44.5 62Z" fill="#26272a"/>
       <path d="M50 67.5 V71.5 M45.5 73.5 Q50 76 54.5 73.5" fill="none" stroke="#5b5f66" stroke-width="1.6" stroke-linecap="round"/>`, '#9aa0ff', '#2e2b80'),
     // 3 곰
-    3: S(`
+    bear: S(`
       <path d="M12 100 Q16 72 50 70 Q84 72 88 100Z" fill="#5a3d2a"/>
       <circle cx="27" cy="31" r="10.5" fill="#7a5438"/><circle cx="27" cy="31" r="5.6" fill="#c2946b"/>
       <circle cx="73" cy="31" r="10.5" fill="#7a5438"/><circle cx="73" cy="31" r="5.6" fill="#c2946b"/>
@@ -46,7 +46,7 @@
       <circle cx="61.5" cy="49" r="3.4" fill="#1b130f"/><circle cx="62.6" cy="47.9" r="1" fill="#fff"/>
       <path d="M33 43 Q38.5 40 44 43" fill="none" stroke="#5e3f28" stroke-width="2" stroke-linecap="round"/><path d="M56 43 Q61.5 40 67 43" fill="none" stroke="#5e3f28" stroke-width="2" stroke-linecap="round"/>`, '#9ad8f7', '#245f92'),
     // 4 표범
-    4: S(`
+    leopard: S(`
       <path d="M16 100 Q20 73 50 71 Q80 73 84 100Z" fill="#c48a31"/>
       <path d="M23 40 Q20 19 37 23 Q39 32 34 40Z" fill="#c98d31"/><path d="M27 35 Q26 25 34 27 Q35 31 32 35Z" fill="#3a2a1a"/>
       <path d="M77 40 Q80 19 63 23 Q61 32 66 40Z" fill="#c98d31"/><path d="M73 35 Q74 25 66 27 Q65 31 68 35Z" fill="#3a2a1a"/>
@@ -61,7 +61,7 @@
       <path d="M45 61.5 L55 61.5 L50 66.5Z" fill="#c4735b"/>
       <path d="M50 66.5 V70 M45.5 72 Q50 74.5 54.5 72" fill="none" stroke="#7b5a3c" stroke-width="1.5" stroke-linecap="round"/>`, '#c995f5', '#552490'),
     // 5 호랑이
-    5: S(`
+    tiger: S(`
       <path d="M16 100 Q20 73 50 71 Q80 73 84 100Z" fill="#e07a1c"/>
       <path d="M22 40 Q19 18 37 23 Q39 32 34 40Z" fill="#1f1a16"/><path d="M26.5 35 Q25.5 25 33.5 27 Q34.5 31 31.5 35Z" fill="#f6efe3"/>
       <path d="M78 40 Q81 18 63 23 Q61 32 66 40Z" fill="#1f1a16"/><path d="M73.5 35 Q74.5 25 66.5 27 Q65.5 31 68.5 35Z" fill="#f6efe3"/>
@@ -78,7 +78,7 @@
       <path d="M50 66.5 V70 M45 72 Q50 75 55 72" fill="none" stroke="#6d5848" stroke-width="1.6" stroke-linecap="round"/>
       <g fill="#6d5848"><circle cx="40" cy="70" r=".9"/><circle cx="37" cy="68" r=".9"/><circle cx="60" cy="70" r=".9"/><circle cx="63" cy="68" r=".9"/></g>`, '#6f8cf5', '#1b2c80'),
     // 6 독수리
-    6: S(`
+    eagle: S(`
       <path d="M16 100 Q20 72 46 70 Q72 72 84 100Z" fill="#4a3123"/>
       <path d="M26 72 l5 7 l4 -7 l5 7 l4 -7 l5 7 l4 -7 l5 7 l4 -7 l5 7 l4 -6" fill="#4a3123"/>
       <path d="M27 66 C23 43 35 24 56 24 C70 24 78 32 78 42 L74 48 C70 62 58 72 44 74 C36 74 29 71 27 66Z" fill="#f6f4ef"/>
@@ -89,7 +89,7 @@
       <path d="M65 48 L80 50.5 Q76 55 67 54Z" fill="#d89a10"/>
       <path d="M71 40 Q80 39 86 46" fill="none" stroke="#ffd25a" stroke-width="1.6" stroke-linecap="round"/>`, '#ffae78', '#ad3f24'),
     // 7 용
-    7: S(`
+    dragon: S(`
       <path d="M50 14 L58 22 L68 16 L70 28 L82 26 L78 38 L90 42 L80 50 L88 60 L76 62 L78 74 L66 70 L62 82 L50 74 L38 82 L34 70 L22 74 L24 62 L12 60 L20 50 L10 42 L22 38 L18 26 L30 28 L32 16 L42 22Z" fill="#f2b33d"/>
       <path d="M50 20 L56 26 L64 22 L66 30 L76 30 L72 40 L82 44 L74 50 L80 58 L70 58 L70 68 L60 64 L50 70 L40 64 L30 68 L30 58 L20 58 L26 50 L18 44 L28 40 L24 30 L34 30 L36 22 L44 26Z" fill="#e0922a"/>
       <path d="M36 32 Q26 16 30 5 Q37 16 42 30Z" fill="#f6e7bf"/><path d="M64 32 Q74 16 70 5 Q63 16 58 30Z" fill="#f6e7bf"/>
@@ -103,7 +103,7 @@
       ${eyeAlmond(39, 49, '#ffd34d', true)}${eyeAlmond(61, 49, '#ffd34d', true)}
       <path d="M35 71 Q21 72 14 86" fill="none" stroke="#f6d27a" stroke-width="2.4" stroke-linecap="round"/><path d="M65 71 Q79 72 86 86" fill="none" stroke="#f6d27a" stroke-width="2.4" stroke-linecap="round"/>`, '#f47a8b', '#861a39'),
     // 8 현무 (거북 + 뱀)
-    8: S(`
+    turtle: S(`
       <ellipse cx="50" cy="98" rx="46" ry="32" fill="#264b48"/>
       <g fill="none" stroke="#3e7570" stroke-width="2.2"><path d="M40 72 L60 72 L66 84 L60 96 L40 96 L34 84Z"/><path d="M34 84 L18 82 M66 84 L82 82 M40 72 L34 66 M60 72 L66 66"/></g>
       <path d="M38 100 L40 70 Q50 66 60 70 L62 100Z" fill="#6b9170"/>
@@ -121,6 +121,85 @@
       <ellipse cx="76" cy="52" rx="6.5" ry="4.6" fill="#1b2b2a" transform="rotate(-20 76 52)"/>
       <circle cx="74.5" cy="50.6" r="1.2" fill="#e3c04c"/>
       <path d="M70 54 L65 55 M65 55 L63 53.5 M65 55 L63 56.8" fill="none" stroke="#d65a4a" stroke-width="1" stroke-linecap="round"/>`, '#f7cf6a', '#9c5a15'),
+    chick: S(`
+      <path d="M50 22 Q46 14 50 10 Q54 15 52 22Z" fill="#f5a623"/><path d="M52 22 Q58 14 62 16 Q58 20 54 23Z" fill="#f5a623"/>
+      <ellipse cx="50" cy="64" rx="31" ry="33" fill="#ffd43b"/>
+      <path d="M22 70 C22 88 36 98 50 98 C34 94 26 84 26 68Z" fill="#f2bd1d"/>
+      <path d="M20 74 Q12 66 18 58 Q26 64 26 74Z" fill="#f7c524"/><path d="M80 74 Q88 66 82 58 Q74 64 74 74Z" fill="#f7c524"/>
+      <ellipse cx="50" cy="44" rx="22" ry="20" fill="#ffdc55"/>
+      <circle cx="41" cy="44" r="3.6" fill="#1b1b1b"/><circle cx="42.3" cy="42.7" r="1.2" fill="#fff"/>
+      <circle cx="59" cy="44" r="3.6" fill="#1b1b1b"/><circle cx="60.3" cy="42.7" r="1.2" fill="#fff"/>
+      <circle cx="34" cy="52" r="4" fill="#ff9e8a" opacity=".7"/><circle cx="66" cy="52" r="4" fill="#ff9e8a" opacity=".7"/>
+      <path d="M44 50 L56 50 L50 58Z" fill="#f08c1e"/><path d="M44 50 L56 50 L50 53Z" fill="#f7a63a"/>`, '#ff9a8a', '#a8344a'),
+    rabbit: S(`
+      <ellipse cx="38" cy="24" rx="7.5" ry="21" fill="#f2eef1" transform="rotate(-8 38 24)"/><ellipse cx="38" cy="25" rx="3.6" ry="15" fill="#f5b2c5" transform="rotate(-8 38 25)"/>
+      <ellipse cx="62" cy="24" rx="7.5" ry="21" fill="#f2eef1" transform="rotate(8 62 24)"/><ellipse cx="62" cy="25" rx="3.6" ry="15" fill="#f5b2c5" transform="rotate(8 62 25)"/>
+      <path d="M18 100 Q22 76 50 74 Q78 76 82 100Z" fill="#e2dce1"/>
+      <ellipse cx="50" cy="60" rx="25" ry="23" fill="#f6f3f5"/>
+      <path d="M26 64 C28 76 38 83 50 83 C40 79 32 72 30 60Z" fill="#e6e0e5"/>
+      <circle cx="40.5" cy="56" r="3.6" fill="#2a1f24"/><circle cx="41.8" cy="54.7" r="1.2" fill="#fff"/>
+      <circle cx="59.5" cy="56" r="3.6" fill="#2a1f24"/><circle cx="60.8" cy="54.7" r="1.2" fill="#fff"/>
+      <circle cx="33" cy="65" r="4" fill="#f7a9bd" opacity=".75"/><circle cx="67" cy="65" r="4" fill="#f7a9bd" opacity=".75"/>
+      <path d="M46.5 64 L53.5 64 L50 67.5Z" fill="#e98aa5"/>
+      <path d="M50 67.5 V70 M46 72 Q48 73.5 50 70 Q52 73.5 54 72" fill="none" stroke="#8c7a83" stroke-width="1.4" stroke-linecap="round"/>
+      <g stroke="#b9adb4" stroke-width="1" stroke-linecap="round"><path d="M38 67 L26 66 M38 69.5 L27 71"/><path d="M62 67 L74 66 M62 69.5 L73 71"/></g>`, '#f59ac8', '#86265f'),
+    squirrel: S(`
+      <path d="M66 100 C98 84 100 44 80 28 C68 20 56 28 62 38 C82 50 82 78 58 94Z" fill="#b85f22"/>
+      <path d="M68 92 C88 78 90 50 76 36 C70 32 64 34 66 38 C80 50 80 74 62 88Z" fill="#d97c35"/>
+      <path d="M14 100 Q18 78 44 76 Q66 78 70 100Z" fill="#b35d24"/>
+      <path d="M32 100 Q34 84 44 82 Q54 84 56 100Z" fill="#f2d6b0"/>
+      <path d="M28 40 L27 24 L38 34Z" fill="#b35d24"/><path d="M27 24 L25 18 L30 22Z" fill="#7a3d14"/>
+      <path d="M60 40 L61 24 L50 34Z" fill="#b35d24"/><path d="M61 24 L63 18 L58 22Z" fill="#7a3d14"/>
+      <ellipse cx="44" cy="56" rx="21" ry="20" fill="#c96a2b"/>
+      <ellipse cx="44" cy="65" rx="11.5" ry="9" fill="#f4dcb8"/>
+      <circle cx="36.5" cy="52" r="3.8" fill="#1d130d"/><circle cx="37.8" cy="50.6" r="1.3" fill="#fff"/>
+      <circle cx="51.5" cy="52" r="3.8" fill="#1d130d"/><circle cx="52.8" cy="50.6" r="1.3" fill="#fff"/>
+      <ellipse cx="44" cy="61" rx="3" ry="2.1" fill="#3a2418"/>
+      <path d="M44 63 V66 M41 67.5 Q44 69.5 47 67.5" fill="none" stroke="#8a5a3a" stroke-width="1.3" stroke-linecap="round"/>
+      <path d="M41 69.5 h6 v4 h-6z" fill="#fff"/>`, '#6fd3d8', '#1c6474'),
+    cat: S(`
+      <path d="M16 100 Q20 74 50 72 Q80 74 84 100Z" fill="#7f868d"/>
+      <path d="M22 44 L26 14 L44 30Z" fill="#8f979f"/><path d="M27 37 L29 21 L39 30Z" fill="#f2b6c0"/>
+      <path d="M78 44 L74 14 L56 30Z" fill="#8f979f"/><path d="M73 37 L71 21 L61 30Z" fill="#f2b6c0"/>
+      <path d="M50 26 C68 26 79 38 79 54 C79 70 66 81 50 81 C34 81 21 70 21 54 C21 38 32 26 50 26Z" fill="#9ea6ad"/>
+      <g fill="none" stroke="#5c6369" stroke-width="2.4" stroke-linecap="round"><path d="M44 29 L45.5 38"/><path d="M50 28 V38"/><path d="M56 29 L54.5 38"/><path d="M22 52 L30 53"/><path d="M22.5 59 L29 59"/><path d="M78 52 L70 53"/><path d="M77.5 59 L71 59"/></g>
+      <ellipse cx="43.5" cy="67" rx="8.5" ry="7" fill="#f4f4f4"/><ellipse cx="56.5" cy="67" rx="8.5" ry="7" fill="#f4f4f4"/><ellipse cx="50" cy="74" rx="7" ry="4.5" fill="#f4f4f4"/>
+      ${eyeAlmond(39, 51, '#c3d84a', true)}${eyeAlmond(61, 51, '#c3d84a', true)}
+      <path d="M46 61 L54 61 L50 65Z" fill="#e88a9b"/>
+      <path d="M50 65 V68 M46 70 Q48 71.5 50 68 Q52 71.5 54 70" fill="none" stroke="#6d7379" stroke-width="1.4" stroke-linecap="round"/>
+      <g stroke="#ffffff" stroke-width="1" stroke-linecap="round" opacity=".85"><path d="M36 66 L22 64 M36 69 L23 70"/><path d="M64 66 L78 64 M64 69 L77 70"/></g>`, '#ffd479', '#a86c10'),
+    fox: S(`
+      <path d="M16 100 Q20 74 50 72 Q80 74 84 100Z" fill="#d86a1f"/>
+      <path d="M34 100 Q36 84 50 82 Q64 84 66 100Z" fill="#f6efe6"/>
+      <path d="M20 46 L22 10 L44 32Z" fill="#e3772a"/><path d="M22 10 L25 22 L30 19Z" fill="#2a1d16"/><path d="M26 38 L26 22 L38 32Z" fill="#f6e1d0"/>
+      <path d="M80 46 L78 10 L56 32Z" fill="#e3772a"/><path d="M78 10 L75 22 L70 19Z" fill="#2a1d16"/><path d="M74 38 L74 22 L62 32Z" fill="#f6e1d0"/>
+      <path d="M50 28 C68 28 80 38 80 52 C80 60 72 66 62 72 L50 84 L38 72 C28 66 20 60 20 52 C20 38 32 28 50 28Z" fill="#ec812f"/>
+      <path d="M20 54 C26 66 36 72 50 84 C64 72 74 66 80 54 C70 62 60 64 50 64 C40 64 30 62 20 54Z" fill="#fbf4ec"/>
+      <path d="M44 30 Q50 44 56 30 Q50 28 44 30Z" fill="#d86a1f"/>
+      ${eyeAlmond(38, 50, '#f3b52a', true)}${eyeAlmond(62, 50, '#f3b52a', true)}
+      <path d="M45.5 75 Q50 72 54.5 75 Q53 79 50 79 Q47 79 45.5 75Z" fill="#26201c"/>`, '#64b5f6', '#173f86'),
+    owl: S(`
+      <path d="M26 30 L22 14 L36 24Z" fill="#7a5235"/><path d="M74 30 L78 14 L64 24Z" fill="#7a5235"/>
+      <path d="M50 20 C72 20 82 38 82 60 C82 84 68 100 50 100 C32 100 18 84 18 60 C18 38 28 20 50 20Z" fill="#8c6040"/>
+      <path d="M36 74 q4 4 8 0 q4 4 8 0 q4 4 8 0 M32 84 q4 4 8 0 q4 4 8 0 q4 4 8 0 q4 4 8 0" fill="none" stroke="#6f4a30" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="50" cy="80" rx="18" ry="18" fill="#c99c70" opacity=".45"/>
+      <circle cx="37" cy="48" r="13" fill="#e8cfae"/><circle cx="63" cy="48" r="13" fill="#e8cfae"/>
+      <circle cx="37" cy="48" r="8.5" fill="#f29a1e"/><circle cx="37" cy="48" r="5" fill="#161210"/><circle cx="38.8" cy="46.2" r="1.6" fill="#fff"/>
+      <circle cx="63" cy="48" r="8.5" fill="#f29a1e"/><circle cx="63" cy="48" r="5" fill="#161210"/><circle cx="64.8" cy="46.2" r="1.6" fill="#fff"/>
+      <path d="M46 56 L54 56 L50 66Z" fill="#e6a42b"/>
+      <path d="M26 38 Q37 30 48 40 M74 38 Q63 30 52 40" fill="none" stroke="#5c3d26" stroke-width="2.6" stroke-linecap="round"/>`, '#8f7cf7', '#271f68'),
+    panda: S(`
+      <path d="M14 100 Q18 74 50 72 Q82 74 86 100Z" fill="#232326"/>
+      <path d="M38 100 Q40 86 50 84 Q60 86 62 100Z" fill="#f4f4f2"/>
+      <circle cx="26" cy="31" r="10" fill="#232326"/><circle cx="74" cy="31" r="10" fill="#232326"/>
+      <ellipse cx="50" cy="55" rx="29" ry="27" fill="#f7f7f5"/>
+      <path d="M22 62 C24 74 34 82 50 82 C38 78 30 70 27 58Z" fill="#e4e4e0"/>
+      <ellipse cx="38" cy="53" rx="7.5" ry="9.5" fill="#232326" transform="rotate(30 38 53)"/><ellipse cx="62" cy="53" rx="7.5" ry="9.5" fill="#232326" transform="rotate(-30 62 53)"/>
+      <circle cx="39" cy="52" r="2.6" fill="#fff"/><circle cx="39.6" cy="52.4" r="1.5" fill="#111"/>
+      <circle cx="61" cy="52" r="2.6" fill="#fff"/><circle cx="60.4" cy="52.4" r="1.5" fill="#111"/>
+      <ellipse cx="50" cy="65" rx="5.2" ry="3.6" fill="#232326"/>
+      <path d="M50 68.5 V71 M46 72.5 Q50 75 54 72.5" fill="none" stroke="#55555a" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="32" cy="66" r="3.6" fill="#f6b1b9" opacity=".6"/><circle cx="68" cy="66" r="3.6" fill="#f6b1b9" opacity=".6"/>`, '#a6e07a', '#33702a'),
   };
   for (const k in ART) ART[k] = ART[k].replace('id="g"', 'id="ag' + k + '"').replace('url(#g)', 'url(#ag' + k + ')');
   window.BOT_ART = ART;
