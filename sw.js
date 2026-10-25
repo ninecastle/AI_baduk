@@ -1,5 +1,5 @@
 /* sw.js — 오프라인 캐시 (GitHub Pages 설치형 앱용). 앱 파일과 신경망을 미리 받아두고, 이후엔 캐시 우선 */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'badukrab-' + VERSION;
 const PRECACHE = [
   './', './index.html', './app.css', './app.js', './go.js', './board-view.js', './engine.worker.js', './review.js',
@@ -22,8 +22,13 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(e.request).then(r => { if (r.ok && /tf\.min\.js|firebase/.test(url.href)) { const c = r.clone(); caches.open(CACHE).then(cache => cache.put(e.request, c)); } return r; }).catch(() => caches.match(e.request)));
     return;
   }
-  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(hit => {
-    const net = fetch(e.request).then(r => { if (r.ok) { const c = r.clone(); caches.open(CACHE).then(cache => cache.put(e.request, c)); } return r; }).catch(() => hit);
-    return hit || net;
-  }));
+  // 신경망 파일(크고 잘 안 바뀜)은 캐시 우선, 나머지 앱 파일은 네트워크 우선(오프라인이면 캐시)
+  if (/\/models\//.test(url.pathname)) {
+    e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request).then(r => { if (r.ok) { const c = r.clone(); caches.open(CACHE).then(cache => cache.put(e.request, c)); } return r; })));
+    return;
+  }
+  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(r => {
+    if (r.ok) { const c = r.clone(); caches.open(CACHE).then(cache => cache.put(e.request, c)); }
+    return r;
+  }).catch(() => caches.match(e.request, { ignoreSearch: true })));
 });
