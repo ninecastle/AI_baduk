@@ -17,7 +17,7 @@ self.onmessage = async (e) => {
     }
     if (d.type === 'analyze') {
       const spec = d.spec, game = KataGame.Game.fromMoves(spec.size, spec.komi, spec.moves, spec.setup);
-      const search = new KataSearch.Search(evFor(spec.size), { batchSize: 4 });
+      const search = new KataSearch.Search(evFor(spec.size), { batchSize: d.batchSize || Math.max(1, Math.min(4, Math.round(d.playouts / 8))) });
       const res = await search.run(game, { maxPlayouts: d.playouts, maxTimeMs: d.timeMs || 1e9, onProgress: (done, total) => self.postMessage({ type: 'progress', done, total }) });
       self.postMessage({ id: d.id, result: res });
       return;

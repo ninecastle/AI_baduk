@@ -8,14 +8,14 @@
 
   // ───────── 봇 ─────────
   const BOTS = [
-    { level: 1, name: '매', rank: '3급', desc: '감각이 좋은 상대. 가끔 엉뚱한 수를 둬요.', color: '#8a6fdf' },
-    { level: 2, name: '늑대', rank: '1급', desc: '빈틈을 파고드는 공격형.', color: '#6b7a8f' },
-    { level: 3, name: '곰', rank: '1단', desc: 'AI의 첫 감각 그대로 두는 두터운 상대.', color: '#8d6a4a' },
-    { level: 4, name: '표범', rank: '2단', desc: '수를 조금 읽고 둬요.', color: '#d4a03a' },
+    { level: 1, name: '매', rank: '6급', desc: '감각으로 두지만 가끔 엉뚱한 수를 둬요.', color: '#8a6fdf' },
+    { level: 2, name: '늑대', rank: '2급', desc: '빈틈을 파고드는 공격형.', color: '#6b7a8f' },
+    { level: 3, name: '곰', rank: '1급', desc: 'AI의 첫 감각 그대로 두는 두터운 상대.', color: '#8d6a4a' },
+    { level: 4, name: '표범', rank: '2단', desc: '몇 수 앞을 읽고 둬요. 곰보다 확실히 강해요.', color: '#d4a03a' },
     { level: 5, name: '호랑이', rank: '3단', desc: '실수를 놓치지 않아요.', color: '#e0563f' },
     { level: 6, name: '독수리', rank: '4단', desc: '넓게 보고 깊게 읽어요.', color: '#3f8fd4' },
     { level: 7, name: '용', rank: '5단', desc: '한 수에 몇 초씩 생각하는 강자.', color: '#2fa37a' },
-    { level: 8, name: '현무', rank: '최강', desc: '가장 깊게 읽는 봇. 한 수에 10초까지 걸려요.', color: '#2e7a9a' },
+    { level: 8, name: '현무', rank: '6단+', desc: '가장 깊게 읽는 봇. 한 수에 10초까지 걸려요.', color: '#2e7a9a' },
   ];
   const botByLevel = lv => BOTS.find(b => b.level === lv) || BOTS[2];
 
@@ -128,7 +128,7 @@
   // 난이도 → KataGo 사용법. temp: 정책 샘플링 온도, rnd: 무작위 수 확률, playouts: 탐색량
   const KATA_LEVELS = {
     1: { temp: 0.9, rnd: 0.03 }, 2: { temp: 0.5 }, 3: { temp: 0.12 },
-    4: { playouts: 16, cpuPlayouts: 4, temp: 0.3, timeMs: 2500 }, 5: { playouts: 48, cpuPlayouts: 8, temp: 0.15, timeMs: 4000 },
+    4: { playouts: 16, cpuPlayouts: 8, timeMs: 2500 }, 5: { playouts: 48, cpuPlayouts: 12, timeMs: 4000 },
     6: { playouts: 120, cpuPlayouts: 12, timeMs: 6000 }, 7: { playouts: 260, cpuPlayouts: 20, timeMs: 8000 }, 8: { playouts: 600, cpuPlayouts: 32, timeMs: 10000 },
   };
   function gameSpec() { return { size: game.size, komi: game.komi, moves: game.moves, setup: game.setup }; }

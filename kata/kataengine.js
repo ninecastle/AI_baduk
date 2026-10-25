@@ -125,11 +125,11 @@
       opts = opts || {};
       if (this.backend === 'cpu-worker') {
         this.progressCb = opts.onProgress;
-        const r = await this._workerCall('analyze', { spec, playouts: opts.playouts || 50, timeMs: opts.timeMs || 0 });
+        const r = await this._workerCall('analyze', { spec, playouts: opts.playouts || 50, timeMs: opts.timeMs || 0, batchSize: opts.batchSize });
         return r.result;
       }
       const game = this.gameFromSpec(spec);
-      const search = new KataSearch.Search(this.evaluatorFor(spec.size), { batchSize: opts.batchSize || 8 });
+      const search = new KataSearch.Search(this.evaluatorFor(spec.size), { batchSize: opts.batchSize || Math.max(1, Math.min(8, Math.round((opts.playouts || 50) / 8))) });
       this.current = search;
       const res = await search.run(game, { maxPlayouts: opts.playouts || 50, maxTimeMs: opts.timeMs || 1e9, onProgress: opts.onProgress, yield: () => new Promise(r => setTimeout(r, 0)) });
       this.current = null;
