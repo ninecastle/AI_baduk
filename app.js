@@ -146,8 +146,8 @@
   }
   // 난이도 → KataGo 사용법. temp: 정책 샘플링 온도, rnd: 무작위 수 확률, playouts: 탐색량
   const KATA_LEVELS = {
-    1: { temp: 1.25, rnd: 0.4 }, 2: { temp: 1.15, rnd: 0.22 }, 3: { temp: 1.05, rnd: 0.12 }, 4: { temp: 1.0, rnd: 0.05 },
-    5: { temp: 0.9, rnd: 0.03 }, 6: { temp: 0.68, rnd: 0.01 }, 7: { temp: 0.58 }, 8: { temp: 0.5 }, 9: { temp: 0.12 },
+    1: { temp: 1.25, rnd: 0.4 }, 2: { temp: 1.15, rnd: 0.22 }, 3: { temp: 1.05, rnd: 0.12 }, 4: { temp: 1.05, rnd: 0.08 },
+    5: { temp: 0.9, rnd: 0.03 }, 6: { temp: 0.68, rnd: 0.01 }, 7: { temp: 0.63 }, 8: { temp: 0.5 }, 9: { temp: 0.12 },
     10: { playouts: 6, cpuPlayouts: 4, timeMs: 2000 }, 11: { playouts: 16, cpuPlayouts: 8, timeMs: 2500 }, 12: { playouts: 40, cpuPlayouts: 12, timeMs: 4000 },
     13: { playouts: 100, cpuPlayouts: 16, timeMs: 6000 }, 14: { playouts: 250, cpuPlayouts: 24, timeMs: 8000 }, 15: { playouts: 600, cpuPlayouts: 32, timeMs: 10000 },
   };
