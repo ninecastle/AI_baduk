@@ -199,7 +199,7 @@
   function ensureView(size) {
     if (!rview) {
       rview = new BoardView($('#review-wrap'), { size, theme: A.settings.theme, stoneStyle: A.settings.stone, coords: A.settings.coords });
-      rview.on('press', (e) => { if (!current) return; const p = rview.pointFromClient(e.clientX, e.clientY, 0); onBoardTap(p); });
+      rview.on('press', (e) => { if (!current) return; if (current.pv) { const pv = current.pv; if (pv.depth < pv.moves.length) pvGo(pv.depth + 1); else extendPV(1, true); return; } const p = rview.pointFromClient(e.clientX, e.clientY, 0); onBoardTap(p); });
     }
     rview.setTheme(A.settings.theme); rview.setStoneStyle(A.settings.stone); rview.setCoords(A.settings.coords);
     rview.setSize(size);
@@ -291,16 +291,28 @@
     if (cur.pv) {
       const pv = cur.pv;
       const depth = Math.min(pv.depth, pv.moves.length);
-      html += `<div class="review-move-head"><span class="chip accent">${esc(pv.title)}</span><span class="s">${pv.firstColor === BLACK ? '흑' : '백'}부터 ${depth}수 표시</span></div>`;
-      html += `<div class="pv-bar"><span>몇 수 뒤까지</span><input type="range" class="range" id="pv-depth" min="1" max="${pv.moves.length}" value="${depth}"><b class="num">${depth}</b></div>`;
-      html += `<div class="small muted">${pv.moves.slice(0, depth).map((p, i) => `${i + 1}.${coord(p, size)}`).join('  ')}</div>`;
-      if (pv.evalText) html += `<div class="small"><b>이 수순 끝 예상:</b> ${esc(pv.evalText)}</div>`;
-      if (pv.extending) html += `<div class="small muted">AI가 더 읽는 중…</div>`;
-      html += `<div class="btn-row">${pv.moves.length < 24 && !pv.extending ? `<button class="btn secondary" id="pv-more">수순 더 읽기</button>` : ''}<button class="btn secondary" id="pv-close">수순 닫기</button></div>`;
+      const n = pv.moves.length, maxLen = 24;
+      const colAt = i => (i % 2 === 0) ? pv.firstColor : 3 - pv.firstColor;
+      const ev = pv.evals[depth];
+      const cur1 = depth > 0 ? `${depth}. ${A.colorName(colAt(depth - 1))} ${coord(pv.moves[depth - 1], size)}` : '수순 시작 전';
+      html += `<div class="review-move-head"><span class="chip accent">${esc(pv.title)}</span><span class="s">${depth} / ${n}수</span></div>`;
+      html += `<div style="font-weight:700;font-size:16px">${esc(cur1)}</div>`;
+      html += `<div class="small" style="min-height:20px">${ev ? `이 수까지 가면: <b>${esc(Math.abs(ev.lead) < 0.05 ? '호각' : leadTxt(ev.lead) + '집')}</b> · 흑 승률 <b>${Math.round(ev.wr * 100)}%</b>` : (pv.evalBusy ? '<span class="muted">형세 계산 중…</span>' : '')}</div>`;
+      html += `<div class="nav-row">
+        <button class="btn secondary" id="pv-first" aria-label="처음" ${depth <= 1 ? 'disabled' : ''}><svg><use href="#i-first"/></svg></button>
+        <button class="btn secondary" id="pv-prev" aria-label="이전" ${depth <= 1 ? 'disabled' : ''}><svg><use href="#i-prev"/></svg></button>
+        <button class="btn primary" id="pv-next" aria-label="다음" ${(depth >= n && (n >= maxLen || pv.extending)) ? 'disabled' : ''}><svg><use href="#i-next"/></svg></button>
+        <button class="btn secondary" id="pv-last" aria-label="끝" ${depth >= n ? 'disabled' : ''}><svg><use href="#i-last"/></svg></button>
+      </div>`;
+      html += `<div class="hint">${pv.extending ? 'AI가 다음 수를 읽는 중…' : depth >= n ? (n >= maxLen ? '최대 24수까지 볼 수 있어요.' : '▶를 누르면 AI가 이어서 읽어요.') : '판을 눌러도 다음 수로 넘어가요.'}</div>`;
+      html += `<div class="btn-row"><button class="btn secondary" id="pv-close">수순 닫기</button></div>`;
       card.innerHTML = html;
-      $('#pv-depth').oninput = e => { pv.depth = +e.target.value; renderMoves(); };
+      $('#pv-first').onclick = () => pvGo(1);
+      $('#pv-prev').onclick = () => pvGo(depth - 1);
+      $('#pv-next').onclick = () => { if (depth < n) pvGo(depth + 1); else extendPV(1, true); };
+      $('#pv-last').onclick = () => pvGo(n);
       $('#pv-close').onclick = () => { cur.pv = null; renderMoves(); };
-      const more = $('#pv-more'); if (more) more.onclick = () => extendPV(6);
+      if (!ev && !pv.evalBusy) evalPV(pv, depth);
       return;
     }
     if (!m) {
@@ -331,9 +343,8 @@
     const moves = (cand.pv && cand.pv.length ? cand.pv : [cand.p]).slice();
     const leadTxt = l => l > 0 ? `흑 +${l.toFixed(1)}집` : l < 0 ? `백 +${(-l).toFixed(1)}집` : '호각';
     const evalText = cand.wr != null ? `${leadTxt(cand.lead)} · 흑 승률 ${Math.round(cand.wr * 100)}%` : null;
-    cur.pv = { kind: 'cand', title: `${'ABC'[i]} ${coord(cand.p, size)} 수순`, baseIdx, firstColor, moves, depth: Math.min(moves.length, 6), evalText, cand };
+    cur.pv = { kind: 'cand', title: `${'ABC'[i]} ${coord(cand.p, size)} 수순`, baseIdx, firstColor, moves, depth: 1, evals: {}, cand };
     renderMoves();
-    if (moves.length < 4) extendPV(4);
   }
   function startPlayedPV() {
     const cur = current, idx = cur.idx, size = cur.entry.size;
@@ -342,30 +353,45 @@
     const reply = after.top.length ? after.top[0] : null;
     const moves = [m.p].concat(reply ? (reply.pv && reply.pv.length ? reply.pv : [reply.p]) : []);
     const leadTxt = l => l > 0 ? `흑 +${l.toFixed(1)}집` : l < 0 ? `백 +${(-l).toFixed(1)}집` : '호각';
-    cur.pv = { kind: 'played', title: `실제 둔 수 ${coord(m.p, size)} 이후`, baseIdx: idx - 1, firstColor: m.c, moves, depth: Math.min(moves.length, 6), evalText: `${leadTxt(after.lead)} · 흑 승률 ${Math.round(after.wr * 100)}%` };
+    cur.pv = { kind: 'played', title: `실제 둔 수 ${coord(m.p, size)} 이후`, baseIdx: idx - 1, firstColor: m.c, moves, depth: 1, evals: { 1: { wr: after.wr, lead: after.lead } } };
     renderMoves();
-    if (moves.length < 4) extendPV(4);
   }
-  /** 수순을 AI로 더 읽기 (정책 1순위를 따라감). steps: 추가로 읽을 수 */
-  async function extendPV(steps) {
+  function pvSeq(pv, depth) {
+    const entry = current.entry, seq = entry.moves.slice(0, pv.baseIdx);
+    let col = pv.firstColor;
+    for (let i = 0; i < depth; i++) { seq.push({ c: col, p: pv.moves[i] }); col = 3 - col; }
+    return { size: entry.size, komi: entry.komi, moves: seq, setup: entry.setup };
+  }
+  function pvGo(d) { const pv = current && current.pv; if (!pv) return; pv.depth = Math.max(1, Math.min(pv.moves.length, d)); renderMoves(); }
+  /** depth수까지 둔 위치의 형세 (흑 기준). 신경망 한 번 평가라 빠름 */
+  async function evalPV(pv, depth) {
+    pv.evalBusy = true;
+    try {
+      const r = await A.kata.evaluate(pvSeq(pv, depth));
+      const toPlay = (depth % 2 === 0) ? pv.firstColor : 3 - pv.firstColor;
+      pv.evals[depth] = toPlay === BLACK ? { wr: r.winrate, lead: r.lead } : { wr: 1 - r.winrate, lead: -r.lead };
+    } catch (_) { }
+    pv.evalBusy = false;
+    if (current && current.pv === pv && pv.depth === depth) renderMoveCard();
+    else if (current && current.pv === pv && !pv.evals[pv.depth]) evalPV(pv, pv.depth);
+  }
+  /** 수순 끝에서 AI가 짧게 수읽기해서 다음 수를 덧붙임 */
+  async function extendPV(steps, advance) {
     const cur = current, pv = cur.pv; if (!pv || pv.extending) return;
     pv.extending = true; renderMoveCard();
     try {
-      const entry = cur.entry;
-      const base = entry.moves.slice(0, pv.baseIdx);
-      let col = pv.firstColor;
-      const seq = base.slice();
-      for (const p of pv.moves) { seq.push({ c: col, p }); col = 3 - col; }
-      for (let k = 0; k < (steps || 6); k++) {
-        const spec = { size: entry.size, komi: entry.komi, moves: seq, setup: entry.setup };
-        const r = await A.kata.evaluate(spec);
-        let best = 0; for (let i = 1; i < r.policy.length; i++) if (r.policy[i] > r.policy[best]) best = i;
-        const p = best === entry.size * entry.size ? -1 : best;
-        if (p < 0) break;
-        pv.moves.push(p); seq.push({ c: col, p }); col = 3 - col;
+      const gpu = A.kata.backend === 'webgl';
+      for (let k = 0; k < (steps || 1) && pv.moves.length < 24; k++) {
+        const depth = pv.moves.length;
+        const res = await A.kata.analyze(pvSeq(pv, depth), { playouts: gpu ? 24 : 6 });
         if (cur.pv !== pv) return;
+        const toPlay = res.toPlay;
+        pv.evals[depth] = toPlay === BLACK ? { wr: res.winrate, lead: res.lead } : { wr: 1 - res.winrate, lead: -res.lead };
+        const best = res.moves[0];
+        if (!best || best.p < 0) { A.toast('여기서 더 둘 곳이 없어요 (패스)'); break; }
+        pv.moves.push(best.p);
       }
-      pv.depth = pv.moves.length;
+      if (advance) pv.depth = pv.moves.length;
     } catch (err) { A.toast('수순을 더 읽지 못했어요'); }
     pv.extending = false;
     if (cur.pv === pv) renderMoves();
@@ -376,6 +402,7 @@
   $('#rv-range').addEventListener('input', e => go(+e.target.value));
   document.addEventListener('keydown', e => {
     if (A.screen !== 'review-moves' || !current) return;
+    if (current.pv) { const pv = current.pv; if (e.key === 'ArrowLeft') { pvGo(pv.depth - 1); e.preventDefault(); } else if (e.key === 'ArrowRight') { if (pv.depth < pv.moves.length) pvGo(pv.depth + 1); else extendPV(1, true); e.preventDefault(); } return; }
     if (e.key === 'ArrowLeft') { go(current.idx - 1); e.preventDefault(); } else if (e.key === 'ArrowRight') { go(current.idx + 1); e.preventDefault(); }
   });
 
