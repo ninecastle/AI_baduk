@@ -84,7 +84,7 @@
   function ensureView() {
     if (!view) {
       view = new BoardView($('#ts-wrap'), { size: SIZE, theme: A.settings.theme, stoneStyle: A.settings.stone, coords: A.settings.coords });
-      view.on('press', (e, type) => { if (!cur || cur.state !== 'play' || cur.busy) return; const p = view.pointFromClient(e.clientX, e.clientY, 0); if (type === 'mouse') { if (p >= 0) userMove(p); } else { cur.ghost = p; draw(); } })
+      view.on('press', (e, type) => { if (cur && cur.state === 'solution' && cur.sol) { goStep(cur.sol.k + 1); return; } if (!cur || cur.state !== 'play' || cur.busy) return; const p = view.pointFromClient(e.clientX, e.clientY, 0); if (type === 'mouse') { if (p >= 0) userMove(p); } else { cur.ghost = p; draw(); } })
         .on('drag', (e, type) => { if (!cur || cur.state !== 'play' || cur.busy || type === 'mouse') return; cur.ghost = view.pointFromClient(e.clientX, e.clientY, 0); draw(); })
         .on('release', (e, type) => { if (!cur || cur.state !== 'play' || cur.busy || type === 'mouse') return; const p = cur.ghost; cur.ghost = -1; draw(); if (p >= 0) userMove(p); })
         .on('hover', (e) => { if (!cur || cur.state !== 'play') return; const p = view.pointFromClient(e.clientX, e.clientY, 0); if (p !== cur.ghost) { cur.ghost = p; draw(); } });
@@ -140,13 +140,24 @@
       btn('next', '다음 문제', 'confirm', () => nextProblem());
       btn('review', '해설 보기', '', () => showSolution());
     } else if (st === 'solution') {
-      panel.innerHTML = `<div class="card-title">정답 수순</div><div class="small">${cur.lineText}</div><div class="small muted" style="margin-top:6px">숫자 순서대로 두면 ${cur.prob.goal === 'kill' ? '상대가 어떻게 버텨도 잡혀요' : '상대가 어떻게 공격해도 살아요'}.</div>`;
+      const sol = cur.sol, n = sol.steps.length - 1, step = sol.steps[sol.k];
+      panel.innerHTML = `<div class="card-title">정답 수순 · ${sol.k} / ${n}</div>
+        <div style="font-weight:700;font-size:16px;min-height:24px">${esc(step.text)}</div>
+        <div class="small muted" style="margin-top:4px">${sol.k === 0 ? '▶를 눌러 한 수씩 보세요. 판을 눌러도 넘어가요.' : sol.k === n ? (cur.prob.goal === 'kill' ? '상대가 어떻게 버텨도 이렇게 잡혀요.' : '상대가 어떻게 공격해도 이렇게 살아요.') : '상대는 가장 끈질긴 수로 버티고 있어요.'}</div>
+        <div class="nav-row" style="margin-top:12px">
+          <button class="btn secondary" id="sv-first" aria-label="처음" ${sol.k === 0 ? 'disabled' : ''}><svg><use href="#i-first"/></svg></button>
+          <button class="btn secondary" id="sv-prev" aria-label="이전" ${sol.k === 0 ? 'disabled' : ''}><svg><use href="#i-prev"/></svg></button>
+          <button class="btn ${sol.k < n ? 'primary' : 'secondary'}" id="sv-next" aria-label="다음" ${sol.k === n ? 'disabled' : ''}><svg><use href="#i-next"/></svg></button>
+          <button class="btn secondary" id="sv-last" aria-label="끝" ${sol.k === n ? 'disabled' : ''}><svg><use href="#i-last"/></svg></button>
+        </div>`;
+      $('#sv-first').onclick = () => goStep(0); $('#sv-prev').onclick = () => goStep(sol.k - 1);
+      $('#sv-next').onclick = () => goStep(sol.k + 1); $('#sv-last').onclick = () => goStep(n);
       btn('undo', '다시 풀기', '', () => restart());
       btn('next', '다음 문제', 'confirm', () => nextProblem());
     }
     $('#ts-status').innerHTML = st === 'play' ? `${cur.moves.length}수째 · ${A.colorName(cur.prob.toPlay)} 차례` : '';
   }
-  function restart() { cur.board = cur.startBoard.clone(); cur.moves = []; cur.state = 'play'; cur.msg = ''; cur.refute = -1; cur.lastMove = -1; cur.showLine = null; cur.hint = 0; render(); }
+  function restart() { cur.sol = null; cur.board = cur.startBoard.clone(); cur.moves = []; cur.state = 'play'; cur.msg = ''; cur.refute = -1; cur.lastMove = -1; cur.showLine = null; cur.hint = 0; render(); }
   function nextProblem() {
     const ps = byLevel(cur.raw.level); const i = ps.indexOf(cur.raw);
     let next = ps.slice(i + 1).find(p => !(progress[p.id] && progress[p.id].solved)) || ps[i + 1] || nextUnsolved() || ps[0];
@@ -228,16 +239,52 @@
   }
   function showSolution() {
     const p = cur.prob;
-    cur.board = cur.startBoard.clone(); cur.moves = []; cur.refute = -1; cur.lastMove = -1;
-    const numbers = new Map(); let col = p.toPlay; const txt = [];
-    const b = cur.board;
-    p.line.forEach((pos, i) => { if (pos < 0) { txt.push(`${i + 1}.손빼기`); col = 3 - col; return; } b.playMoveAssumeLegal(toLoc(pos), col); numbers.set(pos, i + 1); txt.push(`${i + 1}.${A.colorName(col)} ${Go.coordLabel(pos, SIZE)}`); col = 3 - col; });
-    for (const [pos] of numbers) if (b.colors[toLoc(pos)] === EMPTY) numbers.delete(pos);
-    cur.showLine = numbers; cur.lineText = txt.join('  '); cur.state = 'solution'; cur.hint = 0;
+    cur.refute = -1; cur.hint = 0;
+    // 수순을 한 수씩 재생할 수 있게 각 단계의 판을 만들어 둠
+    const s = makeSolver(); s.attacker = p.attacker; s.defender = 3 - p.attacker; s.targetLocs = p.target.map(toLoc);
+    const goalDone = b => p.goal === 'kill' ? s.targetCaptured(b) : s.targetAlive(b);
+    const steps = [{ board: cur.startBoard.clone(), pos: -1, col: 0, text: '처음 모양', caps: 0 }];
+    let b = cur.startBoard.clone(), col = p.toPlay;
+    const line = p.line.slice();
+    while (line.length && line[line.length - 1] < 0) line.pop(); // 끝의 손빼기 제거
+    for (let i = 0; i < line.length; i++) {
+      const pos = line[i];
+      const nb = b.clone();
+      let caps = 0;
+      if (pos >= 0) {
+        const before = col === BLACK ? nb.numWhiteCaptures : nb.numBlackCaptures;
+        nb.playMoveAssumeLegal(toLoc(pos), col);
+        caps = (col === BLACK ? nb.numWhiteCaptures : nb.numBlackCaptures) - before;
+      } else nb.playMoveAssumeLegal(KB.PASS_LOC, col);
+      const who = A.colorName(col);
+      let text = pos < 0 ? `${who} 손빼기` : `${who} ${Go.coordLabel(pos, SIZE)}`;
+      if (i === 0) text += ' — 정답 첫 수';
+      else if (col !== p.toPlay && pos >= 0) text += ' — 상대의 저항';
+      if (caps > 0) text += ` · ${caps}점 따냄`;
+      const done = goalDone(nb);
+      if (done) text += p.goal === 'kill' ? ' → 잡혔어요!' : ' → 두 집, 완전히 살았어요!';
+      steps.push({ board: nb, pos, col, text, caps });
+      b = nb; col = 3 - col;
+      if (done) break;
+    }
+    cur.sol = { steps, k: 0 };
+    cur.state = 'solution';
     if (!(progress[cur.raw.id] && progress[cur.raw.id].solved)) mark(false);
+    goStep(1);
+  }
+  function goStep(k) {
+    const sol = cur.sol; if (!sol) return;
+    sol.k = Math.max(0, Math.min(sol.steps.length - 1, k));
+    const st = sol.steps[sol.k];
+    cur.board = st.board.clone();
+    cur.lastMove = st.pos;
+    // 지금까지 둔 수에 번호 표시 (판에 남아 있는 돌만)
+    const numbers = new Map();
+    for (let i = 1; i <= sol.k; i++) { const q = sol.steps[i].pos; if (q >= 0 && cur.board.colors[toLoc(q)] === sol.steps[i].col) numbers.set(q, i); }
+    cur.showLine = numbers;
     draw(); renderPanel();
   }
-
+  document.addEventListener('keydown', e => { if (A.screen !== 'tsumego-play' || !cur || cur.state !== 'solution') return; if (e.key === 'ArrowRight') { goStep(cur.sol.k + 1); e.preventDefault(); } else if (e.key === 'ArrowLeft') { goStep(cur.sol.k - 1); e.preventDefault(); } });
   // 테스트용: 현재 위치에서 정답 수 / 오답 수 찾기
   function debugNextGood() {
     if (!cur || cur.state !== 'play') return -1;
