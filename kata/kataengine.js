@@ -125,13 +125,13 @@
       opts = opts || {};
       if (this.backend === 'cpu-worker') {
         this.progressCb = opts.onProgress;
-        const r = await this._workerCall('analyze', { spec, playouts: opts.playouts || 50, timeMs: opts.timeMs || 0, batchSize: opts.batchSize });
+        const r = await this._workerCall('analyze', { spec, playouts: opts.playouts || 50, timeMs: opts.timeMs || 0, batchSize: opts.batchSize, earlyStop: opts.earlyStop });
         return r.result;
       }
       const game = this.gameFromSpec(spec);
       const search = new KataSearch.Search(this.evaluatorFor(spec.size), { batchSize: opts.batchSize || Math.max(1, Math.min(8, Math.round((opts.playouts || 50) / 8))) });
       this.current = search;
-      const res = await search.run(game, { maxPlayouts: opts.playouts || 50, maxTimeMs: opts.timeMs || 1e9, onProgress: opts.onProgress, yield: () => new Promise(r => setTimeout(r, 0)) });
+      const res = await search.run(game, { maxPlayouts: opts.playouts || 50, maxTimeMs: opts.timeMs || 1e9, earlyStop: opts.earlyStop, onProgress: opts.onProgress, yield: () => new Promise(r => setTimeout(r, 0)) });
       this.current = null;
       return res;
     }
@@ -155,8 +155,9 @@
       const game = this.gameFromSpec(spec), L = spec.size;
       const bin = new Float32Array(L * L * KataFeatures.NUM_BIN), glob = new Float32Array(KataFeatures.NUM_GLOBAL);
       KataFeatures.fill(game.position(true), game.toPlay, { isRoot: true, conservativePass: true }, L, bin, glob);
-      const out = await this.net.forward(bin, glob, 1, L);
-      return KataNet.postprocess(out, 0, game.legalMask(), L);
+      // 판을 8방향으로 돌려 평가한 평균 (대칭인 수는 같은 점수)
+      const [r] = await this.evaluatorFor(L).evaluate([{ bin, glob, legal: game.legalMask(), allSym: true }]);
+      return r;
     }
   }
 

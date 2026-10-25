@@ -11,14 +11,14 @@ self.onmessage = async (e) => {
       const spec = d.spec, L = spec.size, game = KataGame.Game.fromMoves(L, spec.komi, spec.moves, spec.setup);
       const bin = new Float32Array(L * L * KataFeatures.NUM_BIN), glob = new Float32Array(KataFeatures.NUM_GLOBAL);
       KataFeatures.fill(game.position(true), game.toPlay, { isRoot: true, conservativePass: true }, L, bin, glob);
-      const out = net.forward(bin, glob, 1, L);
-      self.postMessage({ id: d.id, result: KataNet.postprocess(out, 0, game.legalMask(), L) });
+      const [r] = await evFor(L).evaluate([{ bin, glob, legal: game.legalMask(), allSym: true }]);
+      self.postMessage({ id: d.id, result: r });
       return;
     }
     if (d.type === 'analyze') {
       const spec = d.spec, game = KataGame.Game.fromMoves(spec.size, spec.komi, spec.moves, spec.setup);
       const search = new KataSearch.Search(evFor(spec.size), { batchSize: d.batchSize || Math.max(1, Math.min(4, Math.round(d.playouts / 8))) });
-      const res = await search.run(game, { maxPlayouts: d.playouts, maxTimeMs: d.timeMs || 1e9, onProgress: (done, total) => self.postMessage({ type: 'progress', done, total }) });
+      const res = await search.run(game, { maxPlayouts: d.playouts, maxTimeMs: d.timeMs || 1e9, earlyStop: d.earlyStop, onProgress: (done, total) => self.postMessage({ type: 'progress', done, total }) });
       self.postMessage({ id: d.id, result: res });
       return;
     }

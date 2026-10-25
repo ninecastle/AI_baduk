@@ -87,7 +87,11 @@
       this.cancelled = false;
       const L = this.L;
       const rootNode = new Node(1);
-      this.rootGame = rootGame;
+      this.rootGame = rootGame; this.rootNode = rootNode;
+      // 판이 대칭이면 같은 자리끼리 묶어서 하나만 탐색 (예: 빈 판의 네 귀)
+      { const b = rootGame.board; this.rootSyms = (limits.noSymPrune ? [] : boardSymmetries(p => b.colors[b.loc(p % L, (p / L) | 0)], L)); }
+      const minStop = limits.minPlayouts != null ? limits.minPlayouts : Math.min(maxPlayouts, Math.max(12, Math.round(maxPlayouts * 0.15)));
+      this.earlyStopped = false;
       this.ownSum = new Float32Array(L * L); this.ownN = 0;
       let playouts = 0;
       while (playouts < maxPlayouts && !this.cancelled && (now() - t0) < maxMs) {
@@ -115,8 +119,22 @@
         }
         if (limits.onProgress) limits.onProgress(playouts, maxPlayouts);
         if (limits.yield) await limits.yield();
+        if (limits.earlyStop !== false && playouts >= minStop && this.decided(rootNode, maxPlayouts - playouts)) { this.earlyStopped = true; break; }
       }
       return this.report(rootNode, rootGame, playouts, now() - t0);
+    }
+
+    /** 더 생각해도 결과가 안 바뀌면 true: 1등 방문수를 남은 탐색으로 못 따라잡거나, 1등이 압도적이고 가치도 가장 높을 때 */
+    decided(root, remaining) {
+      const ch = root.children; if (!ch || ch.length < 2) return !!ch;
+      let a = null, b = null;
+      for (const c of ch) { if (!a || c.node.visits > a.node.visits) { b = a; a = c; } else if (!b || c.node.visits > b.node.visits) b = c; }
+      if (!b || a.node.visits - b.node.visits > remaining) return true;
+      const tot = root.visits || 1;
+      if (a.node.visits < 0.75 * tot) return false;
+      const qa = -a.node.valueSum / Math.max(1, a.node.visits);
+      for (const c of ch) if (c !== a && c.node.visits >= 2 && -c.node.valueSum / c.node.visits > qa - 0.02) return false;
+      return true;
     }
 
     select(rootNode, rootGame) {
@@ -163,14 +181,28 @@
         const loc = b.loc(x, y);
         if (b.colors[loc] === EMPTY && !legal[y * this.L + x] && loc !== b.ko && !b.isSuicide(loc, leaf.pla)) bin[(y * this.L + x) * KF.NUM_BIN + 6] = 1;
       }
-      return { node, path, leaf, item: { bin, glob, legal } };
+      return { node, path, leaf, item: { bin, glob, legal, allSym: node === rootNode } };
     }
 
     expand(node, r, leaf, legal) {
       if (node.children) return; // 이미 확장됨 (중복 평가)
       node.nn = { winrate: r.winrate, lead: r.lead, policy: r.policy };
       const L = this.L, b = leaf.board, children = [];
-      for (let p = 0; p < L * L; p++) if (legal[p] && r.policy[p] > 0) children.push({ move: b.loc(p % L, (p / L) | 0), prior: r.policy[p], node: new Node(r.policy[p]) });
+      const prune = node === this.rootNode && this.rootSyms && this.rootSyms.length ? symMaps(L) : null;
+      if (prune) this.rootEquiv = new Map();
+      for (let p = 0; p < L * L; p++) {
+        if (!(legal[p] && r.policy[p] > 0)) continue;
+        let prior = r.policy[p];
+        if (prune) {
+          let canon = p; for (const sy of this.rootSyms) canon = Math.min(canon, prune[sy][p]);
+          if (!this.rootEquiv.has(canon)) this.rootEquiv.set(canon, []);
+          this.rootEquiv.get(canon).push(p);
+          if (canon !== p) continue;
+          // 같은 자리 묶음의 사전확률을 모두 더함(중복 제외)
+          const seen = new Set([p]); prior = r.policy[p]; for (const sy of this.rootSyms) { const q = prune[sy][p]; if (!seen.has(q)) { seen.add(q); prior += r.policy[q]; } }
+        }
+        children.push({ move: b.loc(p % L, (p / L) | 0), prior, node: new Node(prior) });
+      }
       children.push({ move: PASS_LOC, prior: r.policy[L * L], node: new Node(r.policy[L * L]) });
       children.sort((a, c) => c.prior - a.prior);
       node.children = children;
@@ -215,6 +247,21 @@
             utility: c.visits ? -c.valueSum / c.visits : null, pv: [toPos(ch.move), ...this.pv(c, 12).map(toPos)] });
         }
       }
+      // 묶어 둔 대칭 자리는 같은 결과로 펼쳐서 보고 (수순도 대칭으로 변환)
+      if (this.rootEquiv && this.rootSyms && this.rootSyms.length) {
+        const maps = symMaps(L), extra = [];
+        for (const m of moves) {
+          if (m.p < 0) continue;
+          const group = this.rootEquiv.get(m.p) || [];
+          const n = group.length || 1; m.prior /= n;
+          for (const q of group) {
+            if (q === m.p) continue;
+            const sy = [0].concat(this.rootSyms).find(t => maps[t][m.p] === q);
+            extra.push(Object.assign({}, m, { p: q, pv: m.pv.map(x => x < 0 ? x : maps[sy][x]) }));
+          }
+        }
+        moves.push(...extra);
+      }
       moves.sort((a, c) => (c.visits - a.visits) || (c.prior - a.prior));
       const rootVisits = rootNode.visits;
       const ownership = new Float32Array(L * L);
@@ -222,28 +269,97 @@
       return { toPlay: rootGame.toPlay, playouts, ms, moves,
         winrate: rootVisits ? rootNode.winSum / rootVisits : 0.5, lead: rootVisits ? rootNode.leadSum / rootVisits : 0,
         nnWinrate: rootNode.nn ? rootNode.nn.winrate : null, nnLead: rootNode.nn ? rootNode.nn.lead : null, nnPolicy: rootNode.nn ? rootNode.nn.policy : null,
-        ownership, rootVisits };
+        ownership, rootVisits, earlyStopped: this.earlyStopped };
     }
   }
 
   /** 네트 → evaluator 어댑터 */
+  /** 대칭 변환표: maps[s][p] = 원래 좌표 p가 대칭 s에서 가는 좌표 */
+  const symCache = new Map();
+  function symMaps(L) {
+    let m = symCache.get(L); if (m) return m;
+    m = [];
+    for (let s = 0; s < 8; s++) {
+      const a = new Int32Array(L * L);
+      for (let p = 0; p < L * L; p++) {
+        let x = p % L, y = (p / L) | 0;
+        if (s & 4) { const t = x; x = y; y = t; }
+        if (s & 1) x = L - 1 - x;
+        if (s & 2) y = L - 1 - y;
+        a[p] = y * L + x;
+      }
+      m.push(a);
+    }
+    symCache.set(L, m); return m;
+  }
+  /** 판이 대칭 s에 대해 그대로인지 (돌 배치 기준) */
+  function boardSymmetries(colorsAt, L) {
+    const maps = symMaps(L), out = [];
+    for (let s = 1; s < 8; s++) { const mp = maps[s]; let ok = true; for (let p = 0; p < L * L && ok; p++) if (colorsAt(p) !== colorsAt(mp[p])) ok = false; if (ok) out.push(s); }
+    return out;
+  }
+
+  /** 신경망 평가기. 항목마다 판을 무작위로 돌려서 평가하고(치우침 제거), allSym 항목은 8방향 평균 */
   function makeEvaluator(net, L, KN) {
+    const maps = symMaps(L), FS = KF.NUM_BIN, LL = L * L;
     return {
       L,
       padTo: 0,
+      randomSym: true,
       async evaluate(items) {
-        const n0 = items.length, FS = KF.NUM_BIN;
-        // GPU는 입력 모양이 바뀔 때마다 다시 컴파일하므로 묶음 크기를 고정(1 또는 padTo)
-        const N = (this.padTo && n0 > 1 && n0 < this.padTo) ? this.padTo : n0;
-        const bin = new Float32Array(N * L * L * FS), glob = new Float32Array(N * KF.NUM_GLOBAL);
-        for (let i = 0; i < n0; i++) { bin.set(items[i].bin, i * L * L * FS); glob.set(items[i].glob, i * KF.NUM_GLOBAL); }
-        const out = await net.forward(bin, glob, N, L);
-        const res = [];
-        for (let i = 0; i < n0; i++) res.push(KN.postprocess(out, i, items[i].legal, L));
+        // 1) 평가할 (항목, 대칭) 목록
+        const jobs = [];
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].allSym) for (let s = 0; s < 8; s++) jobs.push({ i, s });
+          else jobs.push({ i, s: this.randomSym ? (Math.random() * 8) | 0 : 0 });
+        }
+        const raw = new Array(jobs.length);
+        // 2) 8개씩 묶어서 계산 (GPU 모양 고정)
+        const CH = this.padTo || 8;
+        for (let j0 = 0; j0 < jobs.length; j0 += CH) {
+          const chunk = jobs.slice(j0, j0 + CH), n0 = chunk.length;
+          const N = (this.padTo && n0 > 1 && n0 < this.padTo) ? this.padTo : n0;
+          const bin = new Float32Array(N * LL * FS), glob = new Float32Array(N * KF.NUM_GLOBAL), legals = [];
+          for (let k = 0; k < n0; k++) {
+            const { i, s } = chunk[k], it = items[i], mp = maps[s], off = k * LL * FS;
+            if (s === 0) bin.set(it.bin, off);
+            else for (let p = 0; p < LL; p++) { const src = p * FS, dst = off + mp[p] * FS; for (let c = 0; c < FS; c++) bin[dst + c] = it.bin[src + c]; }
+            glob.set(it.glob, k * KF.NUM_GLOBAL);
+            let lg = it.legal;
+            if (s !== 0) { lg = new Uint8Array(LL + 1); for (let p = 0; p < LL; p++) lg[mp[p]] = it.legal[p]; lg[LL] = it.legal[LL]; }
+            legals.push(lg);
+          }
+          const out = await net.forward(bin, glob, N, L);
+          for (let k = 0; k < n0; k++) {
+            const r = KN.postprocess(out, k, legals[k], L), mp = maps[chunk[k].s];
+            if (chunk[k].s !== 0) {
+              const pol = new Float32Array(LL + 1), own = new Float32Array(LL);
+              for (let p = 0; p < LL; p++) { pol[p] = r.policy[mp[p]]; own[p] = r.ownership[mp[p]]; }
+              pol[LL] = r.policy[LL]; r.policy = pol; r.ownership = own;
+            }
+            raw[j0 + k] = r;
+          }
+        }
+        // 3) 항목별로 모으기 (여러 대칭이면 평균)
+        const res = items.map(() => null), cnt = items.map(() => 0);
+        for (let j = 0; j < jobs.length; j++) {
+          const i = jobs[j].i, r = raw[j];
+          if (!res[i]) { res[i] = r; cnt[i] = 1; continue; }
+          const a = res[i]; cnt[i]++;
+          for (let p = 0; p <= LL; p++) a.policy[p] += r.policy[p];
+          for (let p = 0; p < LL; p++) a.ownership[p] += r.ownership[p];
+          for (const k of ['winrate', 'scoreMean', 'scoreStdev', 'lead', 'varTime']) a[k] += r[k];
+        }
+        for (let i = 0; i < items.length; i++) if (cnt[i] > 1) {
+          const a = res[i], n = cnt[i];
+          for (let p = 0; p <= LL; p++) a.policy[p] /= n;
+          for (let p = 0; p < LL; p++) a.ownership[p] /= n;
+          for (const k of ['winrate', 'scoreMean', 'scoreStdev', 'lead', 'varTime']) a[k] /= n;
+        }
         return res;
       }
     };
   }
 
-  return { Search, Node, makeEvaluator };
+  return { Search, Node, makeEvaluator, symMaps, boardSymmetries };
 });

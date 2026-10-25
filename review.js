@@ -77,7 +77,7 @@
       if (run.cancelled) break;
       const spec = { size: entry.size, komi: entry.komi, moves: entry.moves.slice(0, k), setup: entry.setup };
       let res;
-      try { res = await A.kata.analyze(spec, { playouts }); }
+      try { res = await A.kata.analyze(spec, { playouts, earlyStop: false }); }
       catch (err) { if (run.cancelled) break; console.warn(err); A.toast('분석 중 오류가 났어요'); break; }
       if (run.cancelled) break;
       positions.push(convertResult(res, entry.size));

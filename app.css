@@ -3,10 +3,10 @@
    Layout: 모바일 = 상단 바 + 콘텐츠 + 하단 탭바 / 데스크톱(≥960px) = 좌측 레일 + 중앙 컬럼, 대국 화면은 판 + 우측 패널
    ─────────────────────────────────────────────── */
 :root {
-  --bg: #0f1317; --surface: #161b21; --surface-2: #1d242c; --surface-3: #262e38;
-  --line: #2b343f; --line-strong: #3a4553;
-  --fg: #eef2f6; --fg-2: #a3adbb; --fg-3: #6e7987;
-  --accent: #2fd1ae; --accent-2: #27bd9c; --accent-ink: #052e25; --accent-soft: rgba(47, 209, 174, 0.14);
+  --bg: #2b2a27; --surface: #3a3835; --surface-2: #42403c; --surface-3: #4b4945;
+  --line: #3f3d39; --line-strong: #5a5752; --nav-bg: #22211e;
+  --fg: #ffffff; --fg-2: #c3c0ba; --fg-3: #8f8c86;
+  --accent: #81b64c; --accent-2: #8fc35a; --accent-ink: #ffffff; --accent-soft: rgba(129, 182, 76, 0.16); --accent-edge: #537a31;
   --danger: #ff6b6b; --danger-soft: rgba(255, 107, 107, 0.14); --warn: #ffb547; --good: #5ee0a0;
   --black-stone: #15171a; --white-stone: #f4f4f1;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -21,7 +21,7 @@
     --bg: #f1f3f6; --surface: #ffffff; --surface-2: #f5f7fa; --surface-3: #e9edf2;
     --line: #dfe4ea; --line-strong: #c9d1db;
     --fg: #151a20; --fg-2: #58626f; --fg-3: #8b95a3;
-    --accent: #0e9c80; --accent-2: #0b8870; --accent-ink: #ffffff; --accent-soft: rgba(14, 156, 128, 0.12);
+    --accent: #5f9c2e; --accent-2: #6aa936; --accent-ink: #ffffff; --accent-soft: rgba(95, 156, 46, 0.13); --accent-edge: #446f20; --nav-bg: #ffffff;
     --danger: #e0443f; --danger-soft: rgba(224, 68, 63, 0.12); --warn: #d98c06; --good: #1f9f66;
     --shadow: 0 10px 30px rgba(20, 30, 45, 0.12), 0 2px 6px rgba(20, 30, 45, 0.08);
     --shadow-sm: 0 2px 8px rgba(20, 30, 45, 0.1);
@@ -32,7 +32,7 @@
   --bg: #f1f3f6; --surface: #ffffff; --surface-2: #f5f7fa; --surface-3: #e9edf2;
   --line: #dfe4ea; --line-strong: #c9d1db;
   --fg: #151a20; --fg-2: #58626f; --fg-3: #8b95a3;
-  --accent: #0e9c80; --accent-2: #0b8870; --accent-ink: #ffffff; --accent-soft: rgba(14, 156, 128, 0.12);
+  --accent: #5f9c2e; --accent-2: #6aa936; --accent-ink: #ffffff; --accent-soft: rgba(95, 156, 46, 0.13); --accent-edge: #446f20; --nav-bg: #ffffff;
   --danger: #e0443f; --danger-soft: rgba(224, 68, 63, 0.12); --warn: #d98c06; --good: #1f9f66;
   --shadow: 0 10px 30px rgba(20, 30, 45, 0.12), 0 2px 6px rgba(20, 30, 45, 0.08);
   --shadow-sm: 0 2px 8px rgba(20, 30, 45, 0.1);
@@ -83,7 +83,7 @@ p { margin: 0; }
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
-  background: var(--surface); border-top: 1px solid var(--line); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+  background: var(--nav-bg); border-top: 1px solid var(--line); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
 }
 .tabbar button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--fg-3); font-size: 11px; font-weight: 500; }
 .tabbar button svg { width: 24px; height: 24px; }
@@ -104,7 +104,8 @@ p { margin: 0; }
 }
 .btn:active { transform: scale(0.98); }
 .btn svg { width: 20px; height: 20px; }
-.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); box-shadow: inset 0 -4px 0 var(--accent-edge); padding-bottom: 3px; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18); }
+.btn.primary:active { box-shadow: inset 0 -2px 0 var(--accent-edge); }
 .btn.primary:hover { background: var(--accent-2); }
 .btn.secondary { background: var(--surface-3); color: var(--fg); }
 .btn.secondary:hover { background: var(--line-strong); }
@@ -163,6 +164,8 @@ p { margin: 0; }
 .avatar.sm { width: 34px; height: 34px; border-radius: 10px; font-size: 14px; }
 .avatar.me { background: linear-gradient(135deg, #3a4a5e, #1f2a38); }
 .avatar svg { width: 60%; height: 60%; }
+.avatar.art { background: #262421; }
+.avatar.art svg { width: 100%; height: 100%; display: block; }
 
 /* 봇 선택 그리드 */
 .bot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -372,3 +375,4 @@ p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001s !important; transition-duration: 0.001s !important; }
 }
+.bot-cell .avatar { width: 58px; height: 58px; border-radius: 14px; }

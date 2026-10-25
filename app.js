@@ -37,9 +37,11 @@
   const colorName = c => c === BLACK ? '흑' : '백';
   function el(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
   function esc(s) { return String(s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
+  let avatarSeq = 0;
   function avatarHTML(bot, cls) {
     if (!bot) return `<div class="avatar me ${cls || ''}">나</div>`;
     const c = bot.color;
+    if (window.BOT_ART && window.BOT_ART[bot.level]) { const uid = 'ag' + bot.level + '_' + (++avatarSeq); return `<div class="avatar art ${cls || ''}">${window.BOT_ART[bot.level].split('ag' + bot.level).join(uid)}</div>`; }
     return `<div class="avatar ${cls || ''}" style="background:linear-gradient(140deg,${c},${shade(c, -0.35)})">${esc(bot.name[0])}</div>`;
   }
   function shade(hex, k) {
@@ -162,7 +164,9 @@
     const spec = gameSpec();
     const late = game.moves.length >= L * L * 0.3;
     if (lv.playouts) {
-      const playouts = kata.backend === 'cpu-worker' ? lv.cpuPlayouts : lv.playouts;
+      let playouts = kata.backend === 'cpu-worker' ? lv.cpuPlayouts : lv.playouts;
+      // 첫 몇 수(빈 귀 차지 등)는 고민할 게 적으니 짧게 생각
+      if (game.moves.length < 4) playouts = Math.min(playouts, 24);
       const res = await kata.analyze(spec, { playouts, timeMs: lv.timeMs || 20000, onProgress: (d, t) => renderStatus(`<b>${esc(botByLevel(game.botLevel).name)}</b> 생각 중 · ${d}/${t}`) });
       if (!res.moves.length) return { move: PASS, winrate: res.winrate };
       const visits = new Float32Array(PASSI + 1); for (const m of res.moves) visits[m.p < 0 ? PASSI : m.p] = m.visits;

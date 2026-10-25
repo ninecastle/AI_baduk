@@ -279,7 +279,7 @@
       // 기준 위치: color 차례. 최선수와 비교
       const specFor = q => ({ size, komi: baseSpec.komi, moves: [{ c: color, p: q }], setup: baseSpec.setup });
       if (!cur.aiBest) {
-        const res = await A.kata.analyze(baseSpec, { playouts: A.kata.backend === 'webgl' ? 48 : 8 });
+        const res = await A.kata.analyze(baseSpec, { playouts: A.kata.backend === 'webgl' ? 48 : 8, earlyStop: false });
         cur.aiBest = res.moves.filter(m => m.p >= 0).slice(0, 3);
       }
       const evalAfter = async q => { const r = await A.kata.evaluate(specFor(q)); return -r.lead; }; // 상대 차례 평가 → 내 기준
