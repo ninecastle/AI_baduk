@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+<title>바둑랩</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1317">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="app.css">
+
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-logo" viewBox="0 0 32 32"><circle cx="11" cy="12" r="8" fill="#15171a"/><circle cx="20" cy="20" r="8" fill="#f4f4f1" stroke="#15171a" stroke-width="1.2"/><circle cx="8.5" cy="9.5" r="2" fill="#5a5f66" opacity=".8"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/><circle cx="9" cy="9" r="2.3" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="2.3" fill="var(--bg)" stroke="currentColor"/></symbol>
+    <symbol id="i-review" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M4 16l5-6 4 3 7-8"/><circle cx="20" cy="5" r="1.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a2.5 2.5 0 0 1 2.5 2.5V7h3A1.5 1.5 0 0 1 19 8.5V11h-1.5a2.5 2.5 0 0 0 0 5H19v3.5a1.5 1.5 0 0 1-1.5 1.5H14v-1.5a2.5 2.5 0 0 0-5 0V21H5.5A1.5 1.5 0 0 1 4 19.5V16h1.5a2.5 2.5 0 0 0 0-5H4V8.5A1.5 1.5 0 0 1 5.5 7h4V5.5A2.5 2.5 0 0 1 12 3z"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M3 4h18v3H3z"/><path d="M10 11h4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+    <symbol id="i-pass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></symbol>
+    <symbol id="i-first" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-7 6 7 6"/><path d="M7 5v14"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-7 6 7 6"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l7 6-7 6"/></symbol>
+    <symbol id="i-last" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l7 6-7 6"/><path d="M17 5v14"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M8 3h8"/><circle cx="9" cy="13" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1.4" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <nav class="rail" id="rail">
+    <div class="brand"><svg class="logo"><use href="#i-logo"/></svg><span>바둑랩</span></div>
+    <button class="nav" data-tab="home"><svg><use href="#i-play"/></svg>대국</button>
+    <button class="nav" data-tab="review"><svg><use href="#i-review"/></svg>리뷰</button>
+    <button class="nav" data-tab="tsumego"><svg><use href="#i-puzzle"/></svg>사활</button>
+    <button class="nav" data-tab="archive"><svg><use href="#i-archive"/></svg>기보함</button>
+    <div class="grow"></div>
+    <button class="nav" data-tab="settings"><svg><use href="#i-settings"/></svg>설정</button>
+  </nav>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn" id="btn-back" hidden aria-label="뒤로"><svg><use href="#i-back"/></svg></button>
+      <div class="brand" id="brand"><svg class="logo"><use href="#i-logo"/></svg><span>바둑랩</span></div>
+      <div class="title" id="top-title"></div>
+      <div class="spacer"></div>
+      <button class="icon-btn" id="btn-settings" aria-label="설정"><svg><use href="#i-settings"/></svg></button>
+    </header>
+
+    <main class="content">
+      <!-- 홈 / 대국 설정 -->
+      <section class="screen" id="screen-home">
+        <div class="hero">
+          <div class="bot-hero">
+            <div class="avatar lg" id="hero-avatar"></div>
+            <div class="info">
+              <div class="name" id="hero-name"></div>
+              <div class="desc" id="hero-desc"></div>
+              <div class="strength" id="hero-strength"></div>
+            </div>
+          </div>
+          <div class="quick-opts" id="quick-opts"></div>
+          <button class="btn primary lg block" id="btn-start"><svg><use href="#i-play"/></svg>대국 시작</button>
+          <button class="btn secondary block" id="btn-resume" hidden>두던 대국 이어서 두기</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">상대 선택</div>
+          <div class="bot-grid" id="bot-grid"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">대국 설정</div>
+          <div class="form-grid">
+            <div class="field"><label>판 크기</label>
+              <div class="segmented" style="grid-template-columns:repeat(3,1fr)" id="seg-size">
+                <button data-v="9">9줄</button><button data-v="13">13줄</button><button data-v="19">19줄</button>
+              </div>
+            </div>
+            <div class="field"><label>내 돌</label>
+              <div class="segmented" style="grid-template-columns:repeat(3,1fr)" id="seg-color">
+                <button data-v="1">흑</button><button data-v="2">백</button><button data-v="0">랜덤</button>
+              </div>
+            </div>
+            <div class="field"><label>접바둑 (치석)</label>
+              <div class="stepper" id="step-handicap"><button data-d="-1" aria-label="줄이기">−</button><div class="value"></div><button data-d="1" aria-label="늘리기">+</button></div>
+            </div>
+            <div class="field"><label>덤</label>
+              <div class="stepper" id="step-komi"><button data-d="-1" aria-label="줄이기">−</button><div class="value"></div><button data-d="1" aria-label="늘리기">+</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card pad-0" id="recent-card">
+          <div class="section-head" style="padding:14px 16px 6px"><h2>최근 대국</h2><button class="link" data-tab="archive">기보함</button></div>
+          <div class="list" id="recent-list"></div>
+        </div>
+      </section>
+
+      <!-- 대국 -->
+      <section class="screen" id="screen-game" hidden>
+        <div class="game-layout">
+          <div class="board-col">
+            <div class="player-bar" id="pb-top"></div>
+            <div class="board-wrap" id="board-wrap" style="margin:10px auto"></div>
+            <div class="player-bar" id="pb-bottom"></div>
+          </div>
+          <div class="side-col">
+            <div class="game-status" id="game-status"></div>
+            <div class="eval-row" id="eval-row" hidden><span>흑</span><div class="eval-bar"><div class="b" id="eval-b"></div></div><span>백</span><span id="eval-txt" class="num"></span></div>
+            <div class="controls" id="controls"></div>
+            <div class="card" id="panel-scoring" hidden>
+              <div class="card-title">계가</div>
+              <div class="score-table" id="score-table"></div>
+              <p class="hint" style="margin-top:10px">판 위의 돌을 누르면 사석 ↔ 살아있는 돌로 바꿀 수 있어요.</p>
+              <div class="btn-row" style="margin-top:12px">
+                <button class="btn secondary" id="btn-score-resume">계속 두기</button>
+                <button class="btn primary" id="btn-score-confirm">계가 확정</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 리뷰 -->
+      <section class="screen" id="screen-review" hidden>
+        <div id="review-home">
+          <div class="card" style="margin-bottom:18px">
+            <div class="card-title">분석 정밀도</div>
+            <div class="mode-pick" id="review-mode">
+              <button data-v="quick"><span class="t">빠른 분석</span><span class="d">수마다 AI 감각 + 짧은 읽기. 몇 분 안에 끝나요.</span></button>
+              <button data-v="deep"><span class="t">정밀 분석</span><span class="d">수마다 더 깊게 읽어요. 시간이 더 걸려요.</span></button>
+            </div>
+          </div>
+          <div class="section-head" style="margin-bottom:8px"><h2>분석할 대국</h2></div>
+          <div class="card pad-0"><div class="list" id="review-list"></div></div>
+        </div>
+        <div id="review-progress" hidden>
+          <div class="card progress-wrap">
+            <div class="avatar lg" id="rp-avatar" style="margin:0 auto"></div>
+            <div style="font-weight:700;font-size:17px" id="rp-title">게임 리뷰 준비 중</div>
+            <div class="muted small" id="rp-sub"></div>
+            <div class="progress-bar"><div id="rp-bar" style="width:0%"></div></div>
+            <button class="btn secondary" id="rp-cancel">취소</button>
+          </div>
+        </div>
+        <div id="review-summary" hidden></div>
+      </section>
+
+      <!-- 리뷰: 한 수씩 보기 -->
+      <section class="screen" id="screen-review-moves" hidden>
+        <div class="game-layout">
+          <div class="board-col">
+            <div class="player-bar" id="rv-top"></div>
+            <div class="board-wrap" id="review-wrap" style="margin:10px auto"></div>
+            <div class="player-bar" id="rv-bottom"></div>
+          </div>
+          <div class="side-col">
+            <svg class="wr-graph" id="rv-graph" viewBox="0 0 600 120" preserveAspectRatio="none"></svg>
+            <input type="range" class="range" id="rv-range" min="0" max="0" value="0">
+            <div class="nav-row">
+              <button class="btn secondary" id="rv-first" aria-label="처음"><svg><use href="#i-first"/></svg></button>
+              <button class="btn secondary" id="rv-prev" aria-label="이전"><svg><use href="#i-prev"/></svg></button>
+              <button class="btn secondary" id="rv-next" aria-label="다음"><svg><use href="#i-next"/></svg></button>
+              <button class="btn secondary" id="rv-last" aria-label="끝"><svg><use href="#i-last"/></svg></button>
+            </div>
+            <div class="card review-move-card" id="rv-card"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 사활 -->
+      <section class="screen" id="screen-tsumego" hidden>
+        <div class="hero" id="ts-hero"></div>
+        <div class="card pad-0"><div class="list" id="ts-levels"></div></div>
+        <div class="card pad-0" id="ts-wrong-card" hidden><div class="section-head" style="padding:14px 16px 6px"><h2>틀린 문제 다시 풀기</h2></div><div class="list" id="ts-wrong-list"></div></div>
+      </section>
+
+      <!-- 사활 풀기 -->
+      <section class="screen" id="screen-tsumego-play" hidden>
+        <div class="game-layout">
+          <div class="board-col">
+            <div class="player-bar" id="ts-prompt"></div>
+            <div class="board-wrap" id="ts-wrap" style="margin:10px auto"></div>
+            <div class="game-status" id="ts-status" style="margin-top:8px"></div>
+          </div>
+          <div class="side-col">
+            <div class="card" id="ts-panel"></div>
+            <div class="controls" id="ts-controls" style="grid-template-columns:repeat(3,1fr)"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 기보함 -->
+      <section class="screen" id="screen-archive" hidden>
+        <div class="section-head"><h2>기보함</h2><button class="btn sm secondary" id="btn-import"><svg><use href="#i-plus"/></svg>SGF 불러오기</button></div>
+        <div class="card pad-0"><div class="list" id="archive-list"></div></div>
+      </section>
+
+      <!-- 기보 뷰어 -->
+      <section class="screen" id="screen-viewer" hidden>
+        <div class="game-layout">
+          <div class="board-col">
+            <div class="player-bar" id="vpb-top"></div>
+            <div class="board-wrap" id="viewer-wrap" style="margin:10px auto"></div>
+            <div class="player-bar" id="vpb-bottom"></div>
+          </div>
+          <div class="side-col">
+            <div class="game-status" id="viewer-status"></div>
+            <input type="range" class="range" id="viewer-range" min="0" max="0" value="0">
+            <div class="nav-row">
+              <button class="btn secondary" id="v-first" aria-label="처음"><svg><use href="#i-first"/></svg></button>
+              <button class="btn secondary" id="v-prev" aria-label="이전"><svg><use href="#i-prev"/></svg></button>
+              <button class="btn secondary" id="v-next" aria-label="다음"><svg><use href="#i-next"/></svg></button>
+              <button class="btn secondary" id="v-last" aria-label="끝"><svg><use href="#i-last"/></svg></button>
+            </div>
+            <div class="card">
+              <div class="switch-row"><div><div class="label">수 번호 표시</div></div><button class="switch" role="switch" aria-checked="false" id="v-numbers"></button></div>
+            </div>
+            <div class="btn-row">
+              <button class="btn secondary" id="v-copy"><svg><use href="#i-copy"/></svg>SGF 복사</button>
+              <button class="btn danger" id="v-delete"><svg><use href="#i-trash"/></svg>삭제</button>
+            </div>
+            <button class="btn primary block" id="v-review"><svg><use href="#i-review"/></svg>게임 리뷰</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 설정 -->
+      <section class="screen" id="screen-settings" hidden>
+        <div class="card">
+          <div class="card-title">바둑판 테마</div>
+          <div class="theme-grid" id="theme-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">돌 스타일</div>
+          <div class="segmented" style="grid-template-columns:repeat(3,1fr)" id="seg-stone"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">대국</div>
+          <div class="switch-row"><div><div class="label">좌표 표시</div><div class="desc">판 가장자리에 A~T, 1~19 표시</div></div><button class="switch" role="switch" id="sw-coords"></button></div>
+          <div class="switch-row"><div><div class="label">착수 확인</div><div class="desc">돌을 올린 뒤 한 번 더 눌러 확정 (오착 방지)</div></div>
+            <div class="segmented" style="grid-template-columns:repeat(3,1fr);min-width:200px" id="seg-confirm"><button data-v="auto">터치만</button><button data-v="always">항상</button><button data-v="never">끄기</button></div></div>
+          <div class="switch-row"><div><div class="label">착수 소리</div></div><button class="switch" role="switch" id="sw-sound"></button></div>
+          <div class="switch-row"><div><div class="label">AI 예상 승률 표시</div><div class="desc">봇이 둘 때마다 판세 바 갱신 (베타)</div></div><button class="switch" role="switch" id="sw-eval"></button></div>
+        </div>
+        <div class="card" id="sync-card">
+          <div class="card-title">계정 · 동기화</div>
+          <div id="sync-body"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">정보</div>
+          <p class="small muted">바둑랩 1단계 — 봇 대전 · 기보함. 한국 룰(집 계가, 덤 6.5). AI는 KataGo 신경망(b10c128)을 기기 안에서 직접 계산하며 외부로 데이터를 보내지 않아요.</p>
+          <p class="small muted" id="engine-info" style="margin-top:8px"></p>
+          <button class="btn secondary block" id="btn-engine-test" style="margin-top:10px">AI 엔진 시험하기</button>
+          <p class="small" id="engine-test-result" style="margin-top:8px"></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="home"><svg><use href="#i-play"/></svg>대국</button>
+    <button data-tab="review"><svg><use href="#i-review"/></svg>리뷰</button>
+    <button data-tab="tsumego"><svg><use href="#i-puzzle"/></svg>사활</button>
+    <button data-tab="archive"><svg><use href="#i-archive"/></svg>기보함</button>
+  </nav>
+</div>
+<div id="sheet-root"></div>
+<div id="toast-root"></div>
+
+<script src="go.js"></script>
+<script src="board-view.js"></script>
+<script src="kata/kataboard.js"></script>
+<script src="kata/katafeatures.js"></script>
+<script src="kata/katagame.js"></script>
+<script src="kata/katanet.js"></script>
+<script src="kata/katasearch.js"></script>
+<script src="kata/kataengine.js"></script>
+<script src="app.js"></script>
+<script src="review.js"></script>
+<script src="tsumego.js"></script>
+<script src="tsumego-data.js"></script>
+<script src="tsumego-ui.js"></script>
+<script src="firebase-config.js"></script>
+<script src="sync.js"></script>
+<script>
+  if ('serviceWorker' in navigator && !/claude\.ai$/.test(location.hostname) && location.protocol === 'https:') {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.warn('sw', e)); });
+  }
+</script>
+
+</body>
+</html>
