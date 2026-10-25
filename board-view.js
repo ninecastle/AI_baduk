@@ -128,7 +128,7 @@
 
     geometry() {
       const S = this.canvas.width, n = this.size;
-      const m = this.coords ? 1.25 : 0.78;
+      const m = this.coords ? (n >= 17 ? 1.55 : 1.35) : 0.78;
       const cell = S / (n - 1 + 2 * m);
       const margin = cell * m;
       return { S, cell, margin, r: cell * 0.47 };
@@ -258,12 +258,13 @@
       // 좌표
       if (this.coords) {
         const L = (root.Go && root.Go.COORD_LETTERS) || 'ABCDEFGHJKLMNOPQRST';
-        ctx.fillStyle = t.coord; ctx.font = `600 ${Math.round(cell * 0.36)}px ${getComputedStyle(document.body).fontFamily}`;
+        const fs = Math.round(Math.min(margin * 0.62, Math.max(cell * 0.56, 11 * this.dpr)));
+        ctx.fillStyle = t.coord; ctx.font = `700 ${fs}px ${getComputedStyle(document.body).fontFamily}`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         for (let i = 0; i < n; i++) {
           const v = margin + i * cell;
-          ctx.fillText(L[i], v, margin * 0.42); ctx.fillText(L[i], v, S - margin * 0.42);
-          ctx.fillText(String(n - i), margin * 0.42, v); ctx.fillText(String(n - i), S - margin * 0.42, v);
+          ctx.fillText(L[i], v, margin * 0.46); ctx.fillText(L[i], v, S - margin * 0.46);
+          ctx.fillText(String(n - i), margin * 0.46, v); ctx.fillText(String(n - i), S - margin * 0.46, v);
         }
       }
       return off;

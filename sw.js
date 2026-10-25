@@ -1,5 +1,5 @@
 /* sw.js — 오프라인 캐시 (GitHub Pages 설치형 앱용). 앱 파일과 신경망을 미리 받아두고, 이후엔 캐시 우선 */
-const VERSION = 'v10';
+const VERSION = 'v11';
 const CACHE = 'badukrab-' + VERSION;
 const PRECACHE = [
   './', './index.html', './app.css', './app.js', './go.js', './board-view.js', './engine.worker.js', './review.js',
