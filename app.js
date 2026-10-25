@@ -148,14 +148,19 @@
   /** 봇 기권 판단 (봇 관점 승률·집 차이). 세 번 연속 조건을 만족해야 기권
       - 압도적 차이(대마가 잡히는 등): 초반이라도 기권
       - 그 외: 판이 거의 채워진 중후반에 역전 가능성이 사실상 없을 때만 */
+  /** 봇 기권 판단 (봇 차례마다 호출, 3번 연속 조건을 만족해야 기권)
+     · 초반(전체의 40% 전): 기권하지 않음. 단, 돌을 대량으로 잃어 승산이 없으면(예: 축으로 수십 점) 기권
+     · 중반 이후(40%~): 승률 2% 미만 + 큰 차이일 때 (접바둑은 이 단계에서 기권하지 않음)
+     · 후반(60%~): 승률 5% 미만 + 역전 불가능한 차이일 때 */
   function shouldResign(wrBot, leadBot) {
     const L = game.size, n = game.moves.length, area = L * L;
-    if (n < Math.min(20, area * 0.2)) { game.botLowCount = 0; return false; }
-    const huge = L >= 19 ? 30 : L >= 13 ? 20 : 12;   // 압도적 차이
-    const lateNeed = L >= 19 ? 15 : L >= 13 ? 10 : 6; // 후반 기준
-    const overwhelming = wrBot < 0.01 && leadBot < -huge;
-    const lateHopeless = n >= area * 0.55 && wrBot < 0.03 && leadBot < -lateNeed;
-    if (overwhelming || lateHopeless) game.botLowCount = (game.botLowCount || 0) + 1; else game.botLowCount = 0;
+    const big = L >= 19 ? 1 : L >= 13 ? 0.6 : 0.35; // 판 크기 보정
+    const botC = game.botColor, humC = botC === BLACK ? WHITE : BLACK;
+    const lostNet = (board.captures[humC] || 0) - (board.captures[botC] || 0); // 봇이 순수하게 잃은 돌
+    const collapse = lostNet >= Math.round(25 * big) && wrBot < 0.01 && leadBot < -Math.round(30 * big);
+    const mid = !game.handicap && n >= area * 0.4 && wrBot < 0.02 && leadBot < -Math.round(20 * big);
+    const late = n >= area * 0.6 && wrBot < 0.05 && leadBot < -Math.round(15 * big);
+    if (collapse || mid || late) game.botLowCount = (game.botLowCount || 0) + 1; else game.botLowCount = 0;
     return game.botLowCount >= 3;
   }
   async function kataGenmove(humanPassed) {
