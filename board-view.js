@@ -122,7 +122,7 @@
       if (w === this.cssSize && dpr === this.dpr) return;
       this.cssSize = w; this.dpr = dpr;
       this.canvas.width = Math.round(w * dpr); this.canvas.height = Math.round(w * dpr);
-      this.bgCache = null;
+      this.bgCache = null; if (this.zoom) this.resetZoom();
       this.draw();
     }
 
@@ -148,25 +148,88 @@
       return gy * this.size + gx;
     }
 
+    /** 확대 상태 적용 (z: 배율, tx/ty: 이동, CSS 픽셀) */
+    _applyZoom() {
+      const w = this.wrap.clientWidth, z = this.zoom.z;
+      this.zoom.tx = Math.min(0, Math.max(w - w * z, this.zoom.tx));
+      this.zoom.ty = Math.min(0, Math.max(w - w * z, this.zoom.ty));
+      if (z <= 1.001) { this.zoom = { z: 1, tx: 0, ty: 0 }; this.canvas.style.transform = ''; }
+      else this.canvas.style.transform = `translate(${this.zoom.tx}px, ${this.zoom.ty}px) scale(${z})`;
+      if (this.zoomBtn) this.zoomBtn.hidden = this.zoom.z <= 1.001;
+    }
+    resetZoom() { this.zoom = { z: 1, tx: 0, ty: 0 }; this._applyZoom(); }
+
     _bindPointer() {
       const c = this.canvas;
-      let pressed = false, pid = null;
+      c.style.transformOrigin = '0 0';
+      this.zoom = { z: 1, tx: 0, ty: 0 };
+      // 확대 상태일 때 원래 크기로 돌아가는 버튼
+      const btn = document.createElement('button');
+      btn.className = 'zoom-reset'; btn.type = 'button'; btn.hidden = true; btn.setAttribute('aria-label', '원래 크기로');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 L21 21 M7.5 10.5 h6"/></svg>';
+      btn.addEventListener('pointerdown', e => e.stopPropagation());
+      btn.addEventListener('click', e => { e.stopPropagation(); this.resetZoom(); });
+      this.wrap.appendChild(btn); this.zoomBtn = btn;
+
+      const pts = new Map(); // 화면에 닿은 손가락들
+      let pressed = false, pid = null, pinch = null, suppress = false;
+      const local = e => { const r = this.wrap.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+      const startPinch = () => {
+        const [a, b] = [...pts.values()];
+        const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+        pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, cx: (mx - this.zoom.tx) / this.zoom.z, cy: (my - this.zoom.ty) / this.zoom.z, z: this.zoom.z };
+      };
       c.addEventListener('pointerdown', e => {
         if (e.button != null && e.button !== 0) return;
+        e.preventDefault();
+        if (e.pointerType === 'touch') {
+          pts.set(e.pointerId, local(e));
+          if (pts.size === 2) {
+            // 두 손가락: 두던 수 취소하고 확대/이동 모드
+            if (pressed) { pressed = false; this.emit('cancel', e); this.emit('leave', e); }
+            suppress = true; startPinch(); return;
+          }
+          if (pts.size > 2 || suppress) return;
+        }
         pressed = true; pid = e.pointerId;
         try { c.setPointerCapture(e.pointerId); } catch (_) { }
         this.emit('press', e, e.pointerType);
-        e.preventDefault();
       });
       c.addEventListener('pointermove', e => {
+        if (e.pointerType === 'touch' && pts.has(e.pointerId)) {
+          pts.set(e.pointerId, local(e));
+          if (pinch && pts.size === 2) {
+            const [a, b] = [...pts.values()];
+            const d = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+            const z = Math.max(1, Math.min(3.5, pinch.z * d / pinch.d));
+            this.zoom = { z, tx: mx - pinch.cx * z, ty: my - pinch.cy * z };
+            this._applyZoom();
+            return;
+          }
+        }
         if (pressed && e.pointerId === pid) this.emit('drag', e, e.pointerType);
         else if (e.pointerType === 'mouse') this.emit('hover', e);
       });
-      const up = e => { if (!pressed || e.pointerId !== pid) return; pressed = false; this.emit('release', e, e.pointerType); };
+      const lift = e => {
+        if (e.pointerType === 'touch') {
+          pts.delete(e.pointerId);
+          if (pts.size < 2) pinch = null;
+                    if (pts.size === 0) suppress = false;
+        }
+      };
+      const up = e => { lift(e); if (!pressed || e.pointerId !== pid) return; pressed = false; this.emit('release', e, e.pointerType); };
       c.addEventListener('pointerup', up);
-      c.addEventListener('pointercancel', e => { if (pressed && e.pointerId === pid) { pressed = false; this.emit('cancel', e); } });
-      c.addEventListener('pointerleave', e => { if (!pressed) this.emit('leave', e); });
+      c.addEventListener('pointercancel', e => { lift(e); if (pressed && e.pointerId === pid) { pressed = false; this.emit('cancel', e); } });
+      c.addEventListener('pointerleave', e => { if (!pressed && e.pointerType === 'mouse') this.emit('leave', e); });
       c.addEventListener('contextmenu', e => e.preventDefault());
+      // 마우스 휠(+Ctrl / 트랙패드 핀치)로도 확대
+      this.wrap.addEventListener('wheel', e => {
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        const [mx, my] = local(e), z0 = this.zoom.z, z = Math.max(1, Math.min(3.5, z0 * Math.exp(-e.deltaY * 0.01)));
+        const cx = (mx - this.zoom.tx) / z0, cy = (my - this.zoom.ty) / z0;
+        this.zoom = { z, tx: mx - cx * z, ty: my - cy * z }; this._applyZoom();
+      }, { passive: false });
     }
 
     _background() {
