@@ -99,21 +99,38 @@
     const positions = resume && Array.isArray(resume.positions) ? resume.positions.slice(0, n + 1) : [];
     const startK = positions.length, t0 = Date.now();
     if (!resume) A.store.set(RUN_KEY, { id: entry.id, mode: runMode, positions: [] });
-    for (let k = startK; k <= n; k++) {
-      if (run.cancelled) break;
-      const spec = { size: entry.size, komi: entry.komi, moves: entry.moves.slice(0, k), setup: entry.setup };
-      let res;
-      try { res = await A.kata.analyze(spec, { playouts, earlyStop: false, tag: 'review' }); }
-      catch (err) { if (run.cancelled) break; console.warn(err); A.toast('분석 중 오류가 났어요'); break; }
-      if (run.cancelled) break;
-      positions.push(convertResult(res, entry.size));
-      if ((k - startK) % 5 === 4 || k === n) A.store.set(RUN_KEY, { id: entry.id, mode: runMode, positions: positions.map(p => Object.assign({}, p, { own: null })) });
-      const elapsed = Date.now() - t0, per = elapsed / (k - startK + 1), remain = Math.round(per * (n - k) / 1000);
-      $('#rp-title').textContent = `${MODES[runMode].name} 중 · ${k} / ${n}수`;
-      $('#rp-sub').textContent = `${cpu ? 'CPU 모드 · ' : ''}남은 시간 약 ${remain >= 60 ? Math.ceil(remain / 60) + '분' : remain + '초'} · 다른 화면에 가도 계속돼요`;
-      $('#rp-bar').style.width = Math.round((k + 1) / (n + 1) * 100) + '%';
-    }
-    const done = positions.length === n + 1;
+    // ① 판을 W구간으로 나눠 동시에 분석 → GPU가 여러 판을 한 번에 묶어 계산
+    // ② 구간 안에서는 앞 수의 읽기를 이어받아(나무 재활용) 모자란 만큼만 더 읽음
+    // ③ 뻔한 수(둔 수가 압도적 1순위, 승부가 완전히 기운 장면, 초반 몇 수)는 절반만 읽고 넘어감
+    const W = cpu ? 1 : 4;
+    let finished = startK, failed = false, lastSave = startK;
+    const prefixLen = () => { let i = startK; while (i <= n && positions[i]) i++; return i; };
+    const total = n + 1 - startK, segLen = Math.ceil(total / W);
+    const segs = Array.from({ length: W }, (_, w) => [startK + w * segLen, Math.min(n, startK + (w + 1) * segLen - 1)]).filter(([a, b]) => a <= b);
+    const worker = async ([from, to], w) => {
+      const key = 'review:' + entry.id + ':' + w;
+      for (let k = from; k <= to; k++) {
+        if (run.cancelled || failed) return;
+        const spec = { size: entry.size, komi: entry.komi, moves: entry.moves.slice(0, k), setup: entry.setup };
+        const opening = k < Math.min(6, Math.round(entry.size * entry.size * 0.02));
+        const po = opening ? Math.max(cpu ? 1 : 8, Math.round(playouts / 2)) : playouts;
+        const reviewStop = cpu ? null : { min: Math.max(4, Math.round(po / 2)), played: k < n ? entry.moves[k].p : null };
+        let res;
+        try { res = await A.kata.analyze(spec, { playouts: po, earlyStop: false, tag: 'review', batchSize: cpu ? undefined : 2, reuseKey: key, reviewStop }); }
+        catch (err) { if (!run.cancelled) { failed = true; console.warn(err); A.toast('분석 중 오류가 났어요'); } return; }
+        if (run.cancelled) return;
+        positions[k] = convertResult(res, entry.size); finished++;
+        const pre = prefixLen();
+        if (pre - lastSave >= 5 || pre === n + 1) { lastSave = pre; A.store.set(RUN_KEY, { id: entry.id, mode: runMode, positions: positions.slice(0, pre).map(p => Object.assign({}, p, { own: null })) }); }
+        const elapsed = Date.now() - t0, per = elapsed / (finished - startK), remain = Math.round(per * (n + 1 - finished) / 1000);
+        $('#rp-title').textContent = `${MODES[runMode].name} 중 · ${finished - 1} / ${n}수`;
+        $('#rp-sub').textContent = `${cpu ? 'CPU 모드 · ' : ''}남은 시간 약 ${remain >= 60 ? Math.ceil(remain / 60) + '분' : remain + '초'} · 다른 화면에 가도 계속돼요`;
+        $('#rp-bar').style.width = Math.round(finished / (n + 1) * 100) + '%';
+      }
+    };
+    await Promise.all(segs.map(worker));
+    if (failed || run.cancelled) positions.length = Math.min(positions.length, prefixLen());
+    const done = !failed && !run.cancelled && prefixLen() === n + 1;
     run = null; keepAwake(false);
     if (!done) { A.store.del(RUN_KEY); prog.hidden = true; if (shown()) { home.hidden = false; onShow(); } A.toast('분석을 취소했어요'); return; }
     const review = buildReview(entry, positions, { mode: runMode, playouts, backend: A.kata.backend });

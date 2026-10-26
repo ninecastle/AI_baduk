@@ -86,24 +86,28 @@
       const B = Math.max(1, Math.min(this.opt.batchSize, maxPlayouts));
       this.cancelled = false;
       const L = this.L;
-      const rootNode = new Node(1);
-      this.rootGame = rootGame; this.rootNode = rootNode;
+      // 앞 수의 탐색 나무를 이어받으면(reuseRoot) 이미 읽어 둔 만큼은 다시 계산하지 않음
+      const reused = !!(limits.reuseRoot && limits.reuseRoot.children && limits.reuseRoot.visits > 0);
+      const rootNode = reused ? limits.reuseRoot : new Node(1);
+      this.rootGame = rootGame; this.rootNode = rootNode; this.lastRoot = rootNode; this.rootEquiv = null;
       // 판이 대칭이면 같은 자리끼리 묶어서 하나만 탐색 (예: 빈 판의 네 귀)
-      { const b = rootGame.board; this.rootSyms = (limits.noSymPrune ? [] : boardSymmetries(p => b.colors[b.loc(p % L, (p / L) | 0)], L)); }
+      { const b = rootGame.board; this.rootSyms = (reused || limits.noSymPrune) ? [] : boardSymmetries(p => b.colors[b.loc(p % L, (p / L) | 0)], L); }
+      const budget = reused ? Math.max(limits.minNew != null ? limits.minNew : Math.min(2, maxPlayouts), maxPlayouts - rootNode.visits) : maxPlayouts;
+      const rs = limits.reviewStop;
       const minStop = limits.minPlayouts != null ? limits.minPlayouts : Math.min(maxPlayouts, Math.max(12, Math.round(maxPlayouts * 0.15)));
       this.earlyStopped = false;
       this.ownSum = new Float32Array(L * L); this.ownN = 0;
       let playouts = 0;
-      while (playouts < maxPlayouts && !this.cancelled && (now() - t0) < maxMs) {
+      while (playouts < budget && !this.cancelled && (now() - t0) < maxMs) {
         const batch = [];
-        for (let k = 0; k < B && playouts + batch.length < maxPlayouts; k++) {
+        for (let k = 0; k < B && playouts + batch.length < budget; k++) {
           const sel = this.select(rootNode, rootGame);
           if (!sel) break;
           if (sel.terminalDone) { playouts++; continue; }
           batch.push(sel);
           if (sel.node === rootNode && batch.length === 1 && playouts === 0) break; // 루트 먼저 단독 평가
         }
-        if (!batch.length) { if (playouts >= maxPlayouts) break; continue; }
+        if (!batch.length) { if (playouts >= budget) break; continue; }
         const items = batch.map(s => s.item);
         const results = await this.ev.evaluate(items);
         for (let i = 0; i < batch.length; i++) {
@@ -119,9 +123,26 @@
         }
         if (limits.onProgress) limits.onProgress(playouts, maxPlayouts);
         if (limits.yield) await limits.yield();
-        if (limits.earlyStop !== false && playouts >= minStop && this.decided(rootNode, maxPlayouts - playouts)) { this.earlyStopped = true; break; }
+        if (limits.earlyStop !== false && playouts >= minStop && this.decided(rootNode, budget - playouts)) { this.earlyStopped = true; break; }
+        if (rs && playouts >= 2 && rootNode.visits >= rs.min && this.reviewDone(rootNode, rs)) { this.earlyStopped = true; break; }
       }
-      return this.report(rootNode, rootGame, playouts, now() - t0);
+      return this.report(rootNode, rootGame, rootNode.visits, now() - t0);
+    }
+
+    /** 리뷰용 조기 종료: 실제로 둔 수가 1순위로 압도적이거나, 승부가 이미 완전히 기울었을 때 */
+    reviewDone(root, rs) {
+      const wr = root.visits ? root.winSum / root.visits : 0.5;
+      if (wr > 0.97 || wr < 0.03) return true;
+      const ch = root.children; if (!ch || !ch.length) return false;
+      let a = null, tot = 0;
+      for (const c of ch) { tot += c.node.visits; if (!a || c.node.visits > a.node.visits) a = c; }
+      return rs.played != null && a.move === rs.played && tot > 0 && a.node.visits >= 0.7 * tot;
+    }
+    /** 둔 수에 해당하는 자식 나무 (다음 수 분석에 이어받기용) */
+    childFor(loc) {
+      const r = this.lastRoot; if (!r || !r.children) return null;
+      const c = r.children.find(x => x.move === loc);
+      return c && c.node.children ? c.node : null;
     }
 
     /** 더 생각해도 결과가 안 바뀌면 true: 1등 방문수를 남은 탐색으로 못 따라잡거나, 1등이 압도적이고 가치도 가장 높을 때 */
@@ -181,7 +202,7 @@
         const loc = b.loc(x, y);
         if (b.colors[loc] === EMPTY && !legal[y * this.L + x] && loc !== b.ko && !b.isSuicide(loc, leaf.pla)) bin[(y * this.L + x) * KF.NUM_BIN + 6] = 1;
       }
-      return { node, path, leaf, item: { bin, glob, legal, allSym: node === rootNode } };
+      return { node, path, leaf, item: { bin, glob, legal, allSym: node === rootNode && !!this.ev.padTo } };
     }
 
     expand(node, r, leaf, legal) {
@@ -306,7 +327,28 @@
       L,
       padTo: 0,
       randomSym: true,
-      async evaluate(items) {
+      coalesce: false, _q: [], _sched: false,
+      /** 여러 탐색이 동시에 부르면 한 번에 묶어서 계산 (GPU는 8개를 1개와 거의 같은 시간에 계산) */
+      evaluate(items) {
+        if (!this.coalesce) return this._evalNow(items);
+        return new Promise((resolve, reject) => {
+          this._q.push({ items, resolve, reject });
+          if (this._sched) return;
+          this._sched = true;
+          const ch = new MessageChannel();
+          ch.port1.onmessage = async () => {
+            this._sched = false;
+            const q = this._q; this._q = [];
+            const all = [].concat(...q.map(x => x.items));
+            try {
+              const res = await this._evalNow(all);
+              let k = 0; for (const x of q) { x.resolve(res.slice(k, k + x.items.length)); k += x.items.length; }
+            } catch (err) { for (const x of q) x.reject(err); }
+          };
+          ch.port2.postMessage(0);
+        });
+      },
+      async _evalNow(items) {
         // 1) 평가할 (항목, 대칭) 목록
         const jobs = [];
         for (let i = 0; i < items.length; i++) {

@@ -100,7 +100,7 @@
     }
     evaluatorFor(size) {
       let ev = this.evaluators.get(size);
-      if (!ev) { ev = KataSearch.makeEvaluator(this.net, size, KataNet); ev.padTo = 8; this.evaluators.set(size, ev); }
+      if (!ev) { ev = KataSearch.makeEvaluator(this.net, size, KataNet); ev.padTo = 8; ev.coalesce = true; this.evaluators.set(size, ev); }
       return ev;
     }
     gameFromSpec(spec) { return KataGame.Game.fromMoves(spec.size, spec.komi, spec.moves, spec.setup); }
@@ -126,16 +126,36 @@
     async _analyze(spec, opts) {
       opts = opts || {};
       if (this.backend === 'cpu-worker') {
-        const r = await this._workerCall('analyze', { spec, playouts: opts.playouts || 50, timeMs: opts.timeMs || 0, batchSize: opts.batchSize, earlyStop: opts.earlyStop }, null, opts.onProgress);
+        const r = await this._workerCall('analyze', { spec, playouts: opts.playouts || 50, timeMs: opts.timeMs || 0, batchSize: opts.batchSize, earlyStop: opts.earlyStop, reuseKey: opts.reuseKey, reviewStop: opts.reviewStop }, null, opts.onProgress);
         return r.result;
       }
       const game = this.gameFromSpec(spec);
       const search = new KataSearch.Search(this.evaluatorFor(spec.size), { batchSize: opts.batchSize || Math.max(1, Math.min(8, Math.round((opts.playouts || 50) / 8))) });
       const entry = { search, tag: opts.tag || '' };
       this.searches.add(entry);
+      this.reuse = this.reuse || new Map();
+      const lim = KataEngine.searchLimits(game, spec, opts, this.reuse);
       try {
-        return await search.run(game, { maxPlayouts: opts.playouts || 50, maxTimeMs: opts.timeMs || 1e9, earlyStop: opts.earlyStop, onProgress: opts.onProgress, yield: yieldNow });
+        const res = await search.run(game, Object.assign(lim, { maxTimeMs: opts.timeMs || 1e9, onProgress: opts.onProgress, yield: yieldNow }));
+        if (opts.reuseKey) this.reuse.set(opts.reuseKey, { sig: KataEngine.movesSig(spec), search });
+        return res;
       } finally { this.searches.delete(entry); }
+    }
+    static movesSig(spec) { return spec.size + '|' + spec.moves.map(m => m.c + ':' + m.p).join(','); }
+    /** 탐색 설정: 앞 수 나무 이어받기 + 리뷰용 조기 종료 */
+    static searchLimits(game, spec, opts, reuseMap) {
+      const lim = { maxPlayouts: opts.playouts || 50, earlyStop: opts.earlyStop };
+      if (opts.reuseKey && reuseMap) {
+        const prev = reuseMap.get(opts.reuseKey);
+        if (prev && spec.moves.length) {
+          const last = spec.moves[spec.moves.length - 1];
+          const sig = KataEngine.movesSig({ size: spec.size, moves: spec.moves.slice(0, -1) });
+          if (prev.sig === sig) lim.reuseRoot = prev.search.childFor(game.locOf(last.p));
+        }
+        reuseMap.delete(opts.reuseKey);
+      }
+      if (opts.reviewStop) lim.reviewStop = { min: opts.reviewStop.min, played: opts.reviewStop.played == null ? null : game.locOf(opts.reviewStop.played) };
+      return lim;
     }
     /** 진행 중 탐색 멈추기 (tag를 주면 그 작업만) */
     cancel(tag) { for (const e of this.searches) if (tag == null || e.tag === tag) e.search.cancel(); }
