@@ -6,6 +6,7 @@
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
 
+  const APP_VERSION = 'v17';
   // ───────── 봇 ─────────
   // 급수는 봇끼리 대국으로 잰 값을 바탕으로 한 추정치 (곰 = 정책망 그대로 ≈ 1급 기준)
   const BOTS = [
@@ -142,7 +143,7 @@
       ov.hidden = !loading;
       ov.innerHTML = loading ? `<div><div style="font-size:17px;opacity:.85;margin-bottom:8px">AI 준비 중</div><div>${esc(kataStatus.text)}</div>${kataStatus.progress != null ? `<div style="margin:12px auto 0;width:180px;height:6px;border-radius:3px;background:rgba(255,255,255,.25)"><div style="height:100%;width:${Math.round(kataStatus.progress * 100)}%;background:#fff;border-radius:3px"></div></div>` : ''}</div>` : '';
     }
-    const info = $('#engine-info'); if (info) info.textContent = kataStatus.phase === 'ready' ? kataStatus.text : kataStatus.phase === 'error' ? kataStatus.text : kataStatus.phase === 'idle' ? 'AI 신경망은 첫 대국·분석 때 내려받아요 (약 6MB)' : kataStatus.text;
+    const info = $('#engine-info'); if (info) info.textContent = '앱 버전 ' + APP_VERSION + ' · ' + (kataStatus.phase === 'ready' ? kataStatus.text : kataStatus.phase === 'error' ? kataStatus.text : kataStatus.phase === 'idle' ? 'AI 신경망은 첫 대국·분석 때 내려받아요 (약 6MB)' : kataStatus.text);
   }
   // 난이도 → KataGo 사용법. temp: 정책 샘플링 온도, rnd: 무작위 수 확률, playouts: 탐색량
   const KATA_LEVELS = {

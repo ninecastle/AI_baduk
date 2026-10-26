@@ -349,13 +349,18 @@
     if (pos && pos.own) return ownerArray(pos.own);
     const key = 'own:' + cur.idx;
     if (!cur.evalCache[key]) {
-      cur.evalCache[key] = 'busy';
-      const e = cur.entry, moves = e.moves.slice(0, cur.idx), want = cur;
-      const toPlay = Go.Board.fromMoves(e.size, moves, e.setup).toPlay;
-      A.kata.evaluate({ size: e.size, komi: e.komi, moves, setup: e.setup }).then(r => {
-        if (pos) pos.own = ownToBlack(r, toPlay);
-        if (current === want && want.idx === cur.idx && !want.pv && want.showOwn) renderMoves();
-      }).catch(() => { delete cur.evalCache[key]; });
+      cur.evalCache[key] = 'busy'; cur.ownMsg = '계산 중…';
+      const e = cur.entry, moves = e.moves.slice(0, cur.idx), want = cur, idx0 = cur.idx;
+      (async () => {
+        try {
+          const toPlay = Go.Board.fromMoves(e.size, moves, e.setup).toPlay;
+          const r = await A.kata.evaluate({ size: e.size, komi: e.komi, moves, setup: e.setup });
+          if (!r || !r.ownership) throw new Error('AI 결과에 영역 정보가 없어요');
+          if (pos) pos.own = ownToBlack(r, toPlay);
+          want.ownMsg = '';
+        } catch (err) { console.warn('영역 계산 실패', err); want.ownMsg = '계산 실패: ' + (err && err.message || err); delete want.evalCache[key]; }
+        if (current === want && want.idx === idx0 && !want.pv && want.showOwn) renderMoves();
+      })();
     }
     return null;
   }
@@ -409,7 +414,7 @@
       html += `<div class="hint">후보를 누르면 AI가 내다본 수순을 판 위에서 볼 수 있어요.</div>`;
     }
     if (m && m.p >= 0) html += `<button class="btn secondary block" id="rv-played-pv">실제 둔 수 이후 예상 수순</button>`;
-    html += `<div class="switch-row" style="border-top:1px solid var(--line);margin-top:4px"><div><div class="label">영역 표시</div><div class="desc">AI가 예상한 집</div></div><button class="switch" role="switch" aria-checked="${cur.showOwn}" id="rv-own"></button></div>`;
+    html += `<div class="switch-row" style="border-top:1px solid var(--line);margin-top:4px"><div><div class="label">영역 표시</div><div class="desc">AI가 예상한 집${cur.showOwn && cur.ownMsg ? ' · ' + esc(cur.ownMsg) : ''}</div></div><button class="switch" role="switch" aria-checked="${cur.showOwn}" id="rv-own"></button></div>`;
     card.innerHTML = html;
     $$('#rv-card .cand').forEach(b => b.onclick = () => startPV(cands[+b.dataset.i], +b.dataset.i));
     const pp = $('#rv-played-pv'); if (pp) pp.onclick = () => startPlayedPV();
