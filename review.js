@@ -321,7 +321,7 @@
       cands.forEach((c, i) => { if (!(m && c.p === m.p) && stones[c.p] === 0) marks.push({ type: 'label', p: c.p, text: 'ABC'[i], color: i === 0 ? '#1baaa0' : '#7d8794' }); });
     }
     const pos = review.positions[cur.pv ? cur.pv.baseIdx : idx];
-    const own = cur.showOwn && pos && pos.own ? ownerArray(pos.own) : null;
+    const own = cur.showOwn ? ownNow(cur) : null;
     rview.setState({ stones: dispStones, lastMove: cur.pv ? -1 : (m ? m.p : -1), ghost: null, dead: null, owner: own, marks, numbers, dimAll: false });
     $('#rv-range').value = idx;
     // 플레이어 바
@@ -335,6 +335,30 @@
     renderMoveCard();
   }
 
+  /** 지금 보이는 판의 AI 예상 집: 수순 보기 중이면 그 수까지 둔 판, 아니면 현재 수. 없으면 계산해서 채움 */
+  function ownToBlack(r, toPlay) { const o = new Int8Array(r.ownership.length), s = toPlay === BLACK ? 1 : -1; for (let i = 0; i < o.length; i++) o[i] = Math.round(Math.max(-1, Math.min(1, s * r.ownership[i])) * 100); return o; }
+  function ownNow(cur) {
+    if (cur.pv) {
+      const pv = cur.pv, d = Math.min(pv.depth, pv.moves.length);
+      pv.owns = pv.owns || {};
+      if (pv.owns[d]) return ownerArray(pv.owns[d]);
+      if (!pv.evalBusy && !pv.evals[d]) evalPV(pv, d);
+      return pv.lastOwn ? ownerArray(pv.lastOwn) : null;
+    }
+    const pos = cur.review.positions[cur.idx];
+    if (pos && pos.own) return ownerArray(pos.own);
+    const key = 'own:' + cur.idx;
+    if (!cur.evalCache[key]) {
+      cur.evalCache[key] = 'busy';
+      const e = cur.entry, moves = e.moves.slice(0, cur.idx), want = cur;
+      const toPlay = Go.Board.fromMoves(e.size, moves, e.setup).toPlay;
+      A.kata.evaluate({ size: e.size, komi: e.komi, moves, setup: e.setup }).then(r => {
+        if (pos) pos.own = ownToBlack(r, toPlay);
+        if (current === want && want.idx === cur.idx && !want.pv && want.showOwn) renderMoves();
+      }).catch(() => { delete cur.evalCache[key]; });
+    }
+    return null;
+  }
   function ownerArray(own) { const o = new Int8Array(own.length); for (let i = 0; i < own.length; i++) o[i] = own[i] > 35 ? BLACK : own[i] < -35 ? WHITE : 0; return o; }
 
   function renderMoveCard() {
@@ -385,7 +409,7 @@
       html += `<div class="hint">후보를 누르면 AI가 내다본 수순을 판 위에서 볼 수 있어요.</div>`;
     }
     if (m && m.p >= 0) html += `<button class="btn secondary block" id="rv-played-pv">실제 둔 수 이후 예상 수순</button>`;
-    html += `<div class="switch-row" style="border-top:1px solid var(--line);margin-top:4px"><div><div class="label">영역 표시</div><div class="desc">AI가 예상한 집</div></div><button class="switch" role="switch" aria-checked="${cur.showOwn}" id="rv-own" ${pos.own ? '' : 'disabled'}></button></div>`;
+    html += `<div class="switch-row" style="border-top:1px solid var(--line);margin-top:4px"><div><div class="label">영역 표시</div><div class="desc">AI가 예상한 집</div></div><button class="switch" role="switch" aria-checked="${cur.showOwn}" id="rv-own"></button></div>`;
     card.innerHTML = html;
     $$('#rv-card .cand').forEach(b => b.onclick = () => startPV(cands[+b.dataset.i], +b.dataset.i));
     const pp = $('#rv-played-pv'); if (pp) pp.onclick = () => startPlayedPV();
@@ -426,6 +450,8 @@
       const r = await A.kata.evaluate(pvSeq(pv, depth));
       const toPlay = (depth % 2 === 0) ? pv.firstColor : 3 - pv.firstColor;
       pv.evals[depth] = toPlay === BLACK ? { wr: r.winrate, lead: r.lead } : { wr: 1 - r.winrate, lead: -r.lead };
+      pv.owns = pv.owns || {}; pv.owns[depth] = ownToBlack(r, toPlay); pv.lastOwn = pv.owns[depth];
+      if (current && current.pv === pv && current.showOwn && pv.depth === depth) rview && renderMoves();
     } catch (_) { }
     pv.evalBusy = false;
     if (current && current.pv === pv && pv.depth === depth) renderMoveCard();
