@@ -18,13 +18,15 @@
     throw new Error('TF.js 로드 실패');
   }
 
+  // setTimeout은 앱이 뒤로 가면 크게 느려지므로 메시지 채널로 양보
+  const yieldNow = (() => { let ch = null, q = []; return () => new Promise(r => { if (!ch) { ch = new MessageChannel(); ch.port1.onmessage = () => { const f = q.shift(); if (f) f(); }; } q.push(r); ch.port2.postMessage(0); }); })();
   class KataEngine {
     constructor(opts) {
       this.modelUrl = (opts && opts.modelUrl) || 'models/b10c128.wasm';
       this.onStatus = (opts && opts.onStatus) || (() => { });
       this.model = null; this.net = null; this.backend = null; // 'webgl' | 'cpu-worker'
       this.evaluators = new Map();
-      this.worker = null; this.pending = null; this.reqId = 0;
+      this.worker = null; this.pending = new Map(); this.progressCbs = new Map(); this.reqId = 0; this.searches = new Set();
       this.ready = null;
       this.busy = false;
     }
@@ -89,12 +91,12 @@
     }
     async _startWorker() {
       this.worker = new Worker('kata/kata.worker.js');
-      this.worker.onmessage = e => { const d = e.data; if (d.type === 'progress') { if (this.progressCb) this.progressCb(d.done, d.total); return; } if (this.pending && this.pending.id === d.id) { const p = this.pending; this.pending = null; d.error ? p.reject(new Error(d.error)) : p.resolve(d); } };
+      this.worker.onmessage = e => { const d = e.data; if (d.type === 'progress') { const cb = this.progressCbs.get(d.id); if (cb) cb(d.done, d.total); return; } const p = this.pending.get(d.id); if (p) { this.pending.delete(d.id); this.progressCbs.delete(d.id); d.error ? p.reject(new Error(d.error)) : p.resolve(d); } };
       const buf = this.modelBuffer.slice(0);
       await this._workerCall('load', { model: buf }, [buf]);
     }
-    _workerCall(type, payload, transfer) {
-      return new Promise((resolve, reject) => { const id = ++this.reqId; this.pending = { id, resolve, reject }; this.worker.postMessage(Object.assign({ id, type }, payload), transfer || []); });
+    _workerCall(type, payload, transfer, onProgress) {
+      return new Promise((resolve, reject) => { const id = ++this.reqId; this.pending.set(id, { resolve, reject }); if (onProgress) this.progressCbs.set(id, onProgress); this.worker.postMessage(Object.assign({ id, type }, payload), transfer || []); });
     }
     evaluatorFor(size) {
       let ev = this.evaluators.get(size);
@@ -124,18 +126,19 @@
     async _analyze(spec, opts) {
       opts = opts || {};
       if (this.backend === 'cpu-worker') {
-        this.progressCb = opts.onProgress;
-        const r = await this._workerCall('analyze', { spec, playouts: opts.playouts || 50, timeMs: opts.timeMs || 0, batchSize: opts.batchSize, earlyStop: opts.earlyStop });
+        const r = await this._workerCall('analyze', { spec, playouts: opts.playouts || 50, timeMs: opts.timeMs || 0, batchSize: opts.batchSize, earlyStop: opts.earlyStop }, null, opts.onProgress);
         return r.result;
       }
       const game = this.gameFromSpec(spec);
       const search = new KataSearch.Search(this.evaluatorFor(spec.size), { batchSize: opts.batchSize || Math.max(1, Math.min(8, Math.round((opts.playouts || 50) / 8))) });
-      this.current = search;
-      const res = await search.run(game, { maxPlayouts: opts.playouts || 50, maxTimeMs: opts.timeMs || 1e9, earlyStop: opts.earlyStop, onProgress: opts.onProgress, yield: () => new Promise(r => setTimeout(r, 0)) });
-      this.current = null;
-      return res;
+      const entry = { search, tag: opts.tag || '' };
+      this.searches.add(entry);
+      try {
+        return await search.run(game, { maxPlayouts: opts.playouts || 50, maxTimeMs: opts.timeMs || 1e9, earlyStop: opts.earlyStop, onProgress: opts.onProgress, yield: yieldNow });
+      } finally { this.searches.delete(entry); }
     }
-    cancel() { if (this.current) this.current.cancel(); }
+    /** 진행 중 탐색 멈추기 (tag를 주면 그 작업만) */
+    cancel(tag) { for (const e of this.searches) if (tag == null || e.tag === tag) e.search.cancel(); }
     /** 판 크기별 GPU 준비(묶음 1, 8)를 미리 해둠. 이미 했으면 바로 끝 */
     async warmup(size) {
       await this.init();

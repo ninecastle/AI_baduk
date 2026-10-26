@@ -906,6 +906,7 @@
     if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(() => ({ game, screen }));
     // 워커 미리 띄우기
     try { ensureWorker(); engineCall('ping', {}).catch(() => { }); } catch (_) { }
+    setTimeout(() => { if (window.Review && window.Review.resumeIfNeeded && !window.Review.isRunning()) window.Review.resumeIfNeeded(); }, 2500);
   }
   if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(boot);
   else boot((window.claude && window.claude.hot && window.claude.hot.data) || {});

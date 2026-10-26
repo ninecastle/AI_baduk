@@ -24,8 +24,9 @@
 
   // ───────── 리뷰 홈 ─────────
   function onShow() {
-    $('#review-home').hidden = false; $('#review-progress').hidden = !!run; $('#review-summary').hidden = true;
+    $('#review-home').hidden = false; $('#review-progress').hidden = !run; $('#review-summary').hidden = true;
     if (run) { $('#review-home').hidden = true; return; }
+    if (resumeIfNeeded()) return;
     $$('#review-mode button').forEach(b => b.classList.toggle('active', b.dataset.v === mode));
     const list = $('#review-list'); list.innerHTML = '';
     const entries = A.getArchive();
@@ -53,46 +54,75 @@
     const entry = A.findEntry(id); if (!entry) { A.toast('기보를 찾을 수 없어요'); return; }
     A.showScreen('review');
     if (entry.review && (cache[id] || entry.review.positions)) { if (!cache[id]) cache[id] = entry.review; showSummary(entry); return; }
-    if (run) { A.toast('다른 대국을 분석하는 중이에요'); return; }
+    if (run) { if (run.id !== id) A.toast('다른 대국을 분석하는 중이에요'); else onShow(); return; }
     await analyze(entry);
   }
 
   // ───────── 분석 ─────────
-  async function analyze(entry) {
+  // 진행 중인 분석은 수마다 저장해 둬서, 앱이 꺼지거나 멈췄다가 다시 열려도 이어서 해요
+  const RUN_KEY = 'reviewRun';
+  function resumeIfNeeded() {
+    if (run) return false;
+    const saved = A.store.get(RUN_KEY, null);
+    if (!saved) return false;
+    const entry = A.findEntry(saved.id);
+    if (!entry || !MODES[saved.mode]) { A.store.del(RUN_KEY); return false; }
+    analyze(entry, saved);
+    return true;
+  }
+  let wakeLock = null;
+  async function keepAwake(on) {
+    try {
+      if (on && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+      if (!on && wakeLock) { const w = wakeLock; wakeLock = null; await w.release(); }
+    } catch (_) { wakeLock = null; }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && run) keepAwake(true); });
+
+  async function analyze(entry, resume) {
     const home = $('#review-home'), prog = $('#review-progress');
-    home.hidden = true; prog.hidden = false; $('#review-summary').hidden = true;
+    const shown = () => A.screen === 'review';
+    const runMode = resume ? resume.mode : mode;
+    if (shown()) { home.hidden = true; prog.hidden = false; $('#review-summary').hidden = true; }
     const bot = entry.imported ? null : A.botByLevel(entry.bot.level);
     $('#rp-avatar').outerHTML = (bot ? A.avatarHTML(bot, 'lg') : A.avatarHTML(null, 'lg')).replace('class="avatar', 'id="rp-avatar" style="margin:0 auto" class="avatar');
-    $('#rp-title').textContent = `${MODES[mode].name} 준비 중`; $('#rp-sub').textContent = 'AI 엔진을 켜는 중…'; $('#rp-bar').style.width = '0%';
-    run = { cancelled: false };
-    $('#rp-cancel').onclick = () => { run.cancelled = true; A.kata.cancel(); };
+    $('#rp-title').textContent = `${MODES[runMode].name} 준비 중`; $('#rp-sub').textContent = 'AI 엔진을 켜는 중…'; $('#rp-bar').style.width = '0%';
+    run = { cancelled: false, id: entry.id };
+    $('#rp-cancel').onclick = () => { run.cancelled = true; A.kata.cancel('review'); };
+    keepAwake(true);
     try {
       await A.ensureKata();
-    } catch (err) { run = null; prog.hidden = true; home.hidden = false; A.toast('AI 신경망을 쓸 수 없어 리뷰를 할 수 없어요'); return; }
+    } catch (err) { run = null; keepAwake(false); prog.hidden = true; home.hidden = false; A.toast('AI 신경망을 쓸 수 없어 리뷰를 할 수 없어요'); return; }
     const cpu = A.kata.backend === 'cpu-worker';
-    const playouts = cpu ? MODES[mode].cpu : MODES[mode].playouts;
-    const n = entry.moves.length, positions = [];
-    const t0 = Date.now();
-    for (let k = 0; k <= n; k++) {
+    const playouts = cpu ? MODES[runMode].cpu : MODES[runMode].playouts;
+    const n = entry.moves.length;
+    const positions = resume && Array.isArray(resume.positions) ? resume.positions.slice(0, n + 1) : [];
+    const startK = positions.length, t0 = Date.now();
+    if (!resume) A.store.set(RUN_KEY, { id: entry.id, mode: runMode, positions: [] });
+    for (let k = startK; k <= n; k++) {
       if (run.cancelled) break;
       const spec = { size: entry.size, komi: entry.komi, moves: entry.moves.slice(0, k), setup: entry.setup };
       let res;
-      try { res = await A.kata.analyze(spec, { playouts, earlyStop: false }); }
+      try { res = await A.kata.analyze(spec, { playouts, earlyStop: false, tag: 'review' }); }
       catch (err) { if (run.cancelled) break; console.warn(err); A.toast('분석 중 오류가 났어요'); break; }
       if (run.cancelled) break;
       positions.push(convertResult(res, entry.size));
-      const elapsed = Date.now() - t0, per = elapsed / (k + 1), remain = Math.round(per * (n - k) / 1000);
-      $('#rp-title').textContent = `${MODES[mode].name} 중 · ${k} / ${n}수`;
-      $('#rp-sub').textContent = `${cpu ? 'CPU 모드 · ' : ''}남은 시간 약 ${remain >= 60 ? Math.ceil(remain / 60) + '분' : remain + '초'}`;
+      if ((k - startK) % 5 === 4 || k === n) A.store.set(RUN_KEY, { id: entry.id, mode: runMode, positions: positions.map(p => Object.assign({}, p, { own: null })) });
+      const elapsed = Date.now() - t0, per = elapsed / (k - startK + 1), remain = Math.round(per * (n - k) / 1000);
+      $('#rp-title').textContent = `${MODES[runMode].name} 중 · ${k} / ${n}수`;
+      $('#rp-sub').textContent = `${cpu ? 'CPU 모드 · ' : ''}남은 시간 약 ${remain >= 60 ? Math.ceil(remain / 60) + '분' : remain + '초'} · 다른 화면에 가도 계속돼요`;
       $('#rp-bar').style.width = Math.round((k + 1) / (n + 1) * 100) + '%';
     }
     const done = positions.length === n + 1;
-    run = null; prog.hidden = true;
-    if (!done) { home.hidden = false; onShow(); A.toast('분석을 취소했어요'); return; }
-    const review = buildReview(entry, positions, { mode, playouts, backend: A.kata.backend });
+    run = null; keepAwake(false);
+    if (!done) { A.store.del(RUN_KEY); prog.hidden = true; if (shown()) { home.hidden = false; onShow(); } A.toast('분석을 취소했어요'); return; }
+    const review = buildReview(entry, positions, { mode: runMode, playouts, backend: A.kata.backend });
     cache[entry.id] = review;
     A.updateEntry(entry.id, { review: stripForStorage(review) });
-    showSummary(entry);
+    A.store.del(RUN_KEY);
+    prog.hidden = true;
+    if (shown()) showSummary(entry);
+    else A.toast('리뷰 분석이 끝났어요. 리뷰 탭에서 확인하세요', 3500);
   }
 
   function convertResult(res, size) {
@@ -415,5 +445,5 @@
     if (e.key === 'ArrowLeft') { go(current.idx - 1); e.preventDefault(); } else if (e.key === 'ArrowRight') { go(current.idx + 1); e.preventDefault(); }
   });
 
-  window.Review = { onShow, onShowMoves, open, CLS };
+  window.Review = { onShow, onShowMoves, open, CLS, resumeIfNeeded, isRunning: () => !!run };
 })();
