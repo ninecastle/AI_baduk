@@ -284,10 +284,13 @@
         for (let p = 0; p < n * n; p++) {
           const o = owner[p]; if (!o) continue;
           if (stones[p] !== EMPTY && !(dead && dead.has(p))) continue;
-          const x = margin + (p % n) * cell, y = margin + ((p / n) | 0) * cell, s = cell * 0.32;
-          ctx.fillStyle = o === BLACK ? 'rgba(15,17,20,0.75)' : 'rgba(255,255,255,0.85)';
+          const x = margin + (p % n) * cell, y = margin + ((p / n) | 0) * cell, s = cell * 0.36;
+          ctx.fillStyle = o === BLACK ? 'rgba(15,17,20,0.85)' : 'rgba(255,255,255,0.92)';
           ctx.fillRect(x - s / 2, y - s / 2, s, s);
-          if (o === WHITE) { ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.strokeRect(x - s / 2, y - s / 2, s, s); }
+          // 어두운 판(호두나무 등)에서도 잘 보이게 테두리
+          ctx.lineWidth = Math.max(1, cell * 0.04);
+          ctx.strokeStyle = o === WHITE ? 'rgba(0,0,0,0.45)' : (this.theme.grain && this.theme.base > '#8' ? 'rgba(255,255,255,0.0)' : 'rgba(255,255,255,0.6)');
+          ctx.strokeRect(x - s / 2, y - s / 2, s, s);
         }
       }
       // 돌
